@@ -9,6 +9,8 @@ export interface MissionTarget {
   locationId: string;
   missionId: string;
   wayId: string;
+  /** Slice 8 (§21.1 Q12): the morgue file's chosen name. */
+  subjectId?: string;
 }
 
 /**

@@ -6,7 +6,11 @@ import {
   ElectionWindowRow,
   NationalSection,
   ElectionCard,
+  ExposeFrontPage,
   FrontPage,
+  LifeDeskRows,
+  LifeLetters,
+  PublicExposeLine,
   WhatNowCard,
   IssuesSection,
   LettersRow,
@@ -88,7 +92,10 @@ export function PaperPage() {
     headline: renderTimeTokens(h.headline, { until: h.until }),
     ...(h.deck ? { deck: renderTimeTokens(h.deck, { until: h.until }) } : {}),
   }));
-  const [lead, ...rest] = headlines;
+  // Slice 8 lane Q (tech design §11.1): the exposé's front page leads the paper the morning after.
+  const exposeFront = headlines.find((h) => h.front === 'expose') ?? null;
+  const [lead, ...rest] = headlines.filter((h) => h !== exposeFront);
+  const life = p.life ?? null;
   const front = p.frontPage;
   const names: Partial<Record<FactionId, string>> =
     character?.factionNames ?? (character ? { [character.factionId]: character.factionName } : {});
@@ -134,6 +141,9 @@ export function PaperPage() {
               }
             />
           )}
+          {exposeFront && (
+            <ExposeFrontPage headline={exposeFront.headline} deck={exposeFront.deck} art={exposeFront.art} />
+          )}
           {lead && (
             <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
               <h2 className="text-center font-display text-[30px] leading-[1.05] font-black sm:text-[36px]">
@@ -174,6 +184,8 @@ export function PaperPage() {
               ))}
             </div>
           )}
+          {/* Slice 8 lane Q (§22.1 Q28): yesterday's printed exposé, In Print in every reader's paper. */}
+          {life?.publicExpose && <PublicExposeLine headline={life.publicExpose.headline} deck={life.publicExpose.deck} />}
           {/* Slice 7 (screens §11): *From the capital* / *The republic*, under the headlines. */}
           {p.national && (
             <NationalSection section={p.national} onOpen={(route) => void navigate({ to: route })} />
@@ -230,7 +242,19 @@ export function PaperPage() {
               onOpen={() => void navigate({ to: '/story/ambition', search: { from: '/paper' } })}
             />
           ))}
+          {/* Slice 8 lane Q (design §10.2): Requests, informants' reports and the Monday gossip. */}
+          {life && (
+            <LifeLetters
+              letters={life.letters}
+              showKicker={p.letters.length === 0}
+              onOpen={() =>
+                character && void navigate({ to: '/city/$cityId', params: { cityId: character.cityId }, search: { places: true } })
+              }
+            />
+          )}
           <DeskList desk={p.desk} onHeld={() => void navigate({ to: '/held' })} />
+          {/* Slice 8 lane Q (design §10.3): Dossier, Patrons, Where you sleep, Legacy and *Ahead*. */}
+          {life?.desk && <LifeDeskRows desk={life.desk} />}
           {/* Slice 6 (screens §8): the desk's *Signed up* rows. */}
           {p.signedUp && <SignedUpRows rows={p.signedUp} />}
           {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above

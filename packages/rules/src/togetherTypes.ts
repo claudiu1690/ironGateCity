@@ -216,6 +216,8 @@ export interface CallSheetView {
     opinionUpTo: number;
     here: boolean;
     goTo: { districtName: string; venueName: string } | null;
+    /** Slice 8 (tech design §3.5, §12.1): the Headline Story takes a Case File (*Attach a Case File*). */
+    caseFile?: boolean;
   }>;
   times: Array<{ hours: 1 | 3 | 6 | 12; startsAt: number }>;
 }

@@ -9,4 +9,9 @@ import { trpc } from '../../lib/trpc';
 export function invalidateLife(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: trpc.life.pathKey() });
   void queryClient.invalidateQueries({ queryKey: trpc.wardrobe.get.queryKey() });
+  // Lane Q (tech design §12.1): the Dossier, the exposé, the patrons, the home and Legacy.
+  void queryClient.invalidateQueries({ queryKey: trpc.dossier.pathKey() });
+  void queryClient.invalidateQueries({ queryKey: trpc.expose.pathKey() });
+  void queryClient.invalidateQueries({ queryKey: trpc.home.pathKey() });
+  void queryClient.invalidateQueries({ queryKey: trpc.legacy.pathKey() });
 }

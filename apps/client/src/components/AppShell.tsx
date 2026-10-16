@@ -65,6 +65,8 @@ export function AppShell() {
     ? 'paper'
     : pathname.startsWith('/me')
       ? 'me'
+      : pathname.startsWith('/dossier')
+        ? 'dossier'
       : pathname.startsWith('/faction')
         ? 'faction'
         : 'map';
@@ -96,7 +98,13 @@ export function AppShell() {
           (character?.politicsWaiting ?? 0) > 0) &&
         active !== 'paper',
     },
-    { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
+    // Slice 8 (tech design §12.1): the Dossier, the fourth tab (it was *Soon*); its dot until opened.
+    {
+      id: 'dossier',
+      label: copy.life.dossier.tab,
+      href: '/dossier',
+      dot: !!character?.dossierDot && active !== 'dossier',
+    },
     {
       id: 'faction',
       label: copy.together.tabs.faction,

@@ -3393,6 +3393,23 @@ export const copy = {
       /** The station sheet's one-line confirm (screens §6.3). */
       sellConfirm: (what: string, n: number) => `Sell ${what} for ${n} Iron?`,
       fileRow: (name: string) => `Case File · ${name}`,
+      /** Lane Q: an entry's source, in plain words (the EntryRow's Courier line; for the designer to tune). */
+      sources: {
+        intelligence: 'Listening',
+        surveillance: 'Watching',
+        theft: 'A lifted letter',
+        informer: 'On the train',
+        cells: 'In the cells',
+        ward: 'On the ward',
+        society: 'A society call',
+        gossip: "A patron's word",
+        informant: 'Your informant',
+        chapter: 'A chapter',
+        morgue: 'The morgue',
+        test: 'A test',
+      } as Record<string, string>,
+      entryStale: (source: string, weekday: string) => `${source} · ${weekday} · stale`,
+      atPlace: (place: string) => `at ${place}`,
       keepIt: 'Keep it',
     },
     // ----- The exposé (screens §7; design §4.5, §16.6) --------------------------------------------
@@ -3753,6 +3770,8 @@ export const copy = {
       notDressed: (door: number) => `Not dressed for it: Charisma ${door} at the door.`,
       wanted: "Not while you're Wanted.",
       onceADay: 'Once a day here; tomorrow.',
+      /** Lane Q: Crane's headline needs a live Issue. */
+      notAnIssue: 'That Issue is settled; choose one still open.',
     },
     // ----- Someone to walk with you (design §24.2; screens §18.1–§18.3) ---------------------------
     minder: {

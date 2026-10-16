@@ -322,3 +322,5 @@ export { HireCard, HireConfirm, MinderEncounterRow, MinderResultRow, MinderRow, 
 export type { HireCardProps, HireConfirmProps, MinderEncounterRowProps, MinderRowProps } from './components/Minder';
 export { BarCard, BuffLine, DiningCard } from './components/Bar';
 export type { BarCardProps, DiningCardProps } from './components/Bar';
+// Slice 8, phase C lane Q (screens §6–§10, §12): the Dossier, the exposé, patrons, home, Legacy, the paper.
+export * from './components/LifeQ';

@@ -30,6 +30,7 @@ import { NationalPage, NationalResultPage, PickPage } from './routes/election';
 import { PresidentPage } from './routes/president';
 import { GovernorPage } from './routes/governor';
 import { PetitionPage } from './routes/petition';
+import { DossierPage, ExposePage, validateDossierSearch, validateExposeSearch } from './routes/dossier';
 import { ChairElectionPage, ChairResultPage, ChairVotePage, ConfidencePage } from './features/chair/ChairElection';
 
 interface RouterContext {
@@ -292,6 +293,24 @@ const nationLaneX = [
   createRoute({ getParentRoute: () => appRoute, path: '/council/petition', component: PetitionPage }),
 ];
 
+/** Slice 8 phase C, lane Q (tech design §12.1): the Dossier tab (`?tab=`) and the exposé (`?loc=`). */
+const dossierRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/dossier',
+  validateSearch: validateDossierSearch,
+  component: function Dossier() {
+    return <DossierPage search={dossierRoute.useSearch()} />;
+  },
+});
+const exposeRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/dossier/expose',
+  validateSearch: validateExposeSearch,
+  component: function Expose() {
+    return <ExposePage search={exposeRoute.useSearch()} />;
+  },
+});
+
 /**
  * Maps v3 §6: the dev map viewer, every tiled picture with every surveyed pin. Dev builds only (the
  * branch is dropped from a production build, with its chunk), outside the sign-in guard.
@@ -327,6 +346,9 @@ const routeTree = rootRoute.addChildren([
     ballotRoute,
     countRoute,
     ...nationLaneX,
+    // Slice 8 phase C, lane Q (tech design §12.1): the Dossier tab and the exposé.
+    dossierRoute,
+    exposeRoute,
     // Slice 7 phase C, lane Y (screens §4.1): the Governor's or the Mayor's page.
     createRoute({ getParentRoute: () => appRoute, path: '/office/governor/$cityId', component: GovernorPage }),
   ]),

@@ -65,6 +65,10 @@ export default defineConfig({
         /(^|[\\/])wardrobe\.spec\.ts$/,
         /(^|[\\/])bodyguard\.spec\.ts$/,
         /(^|[\\/])bar\.spec\.ts$/,
+        // Slice 8, lane Q: each in its own project after lane P's.
+        /(^|[\\/])dossier\.spec\.ts$/,
+        /(^|[\\/])patron\.spec\.ts$/,
+        /(^|[\\/])home\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -314,6 +318,26 @@ export default defineConfig({
       name: 'bar',
       testMatch: /(^|[\\/])bar\.spec\.ts$/,
       dependencies: ['bodyguard'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    // Slice 8, lane Q (tech design §15.1): the Dossier and the exposé, a patron, the flat and Legacy;
+    // each in its own project after lane P's (each moves the shared clock by a day or two).
+    {
+      name: 'dossier',
+      testMatch: /(^|[\\/])dossier\.spec\.ts$/,
+      dependencies: ['bar'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'patron',
+      testMatch: /(^|[\\/])patron\.spec\.ts$/,
+      dependencies: ['dossier'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'home',
+      testMatch: /(^|[\\/])home\.spec\.ts$/,
+      dependencies: ['patron'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],

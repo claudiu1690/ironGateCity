@@ -74,7 +74,9 @@ export interface CallEventSheetProps {
   ladder: readonly string[];
   /** Live Energy (projected now). */
   energy: number;
-  onCall: (input: { typeId: string; hours: EventHours; roleId: string }) => void;
+  onCall: (input: { typeId: string; hours: EventHours; roleId: string; caseFileId?: string }) => void;
+  /** Slice 8 lane Q (tech design §3.5): the held Case Files the Headline Story may take. */
+  caseFiles?: ReadonlyArray<{ id: string; name: string; party: string }>;
   pending?: boolean;
   /** A refusal from the server, worded. */
   notice?: string | null;
@@ -96,8 +98,10 @@ export function CallEventSheet({
   onCall,
   pending = false,
   notice,
+  caseFiles = [],
 }: CallEventSheetProps) {
   const [typeId, setTypeId] = useState<string | null>(null);
+  const [fileId, setFileId] = useState<string | null>(null);
   const [hours, setHours] = useState<EventHours>(1);
   const [roleId, setRoleId] = useState<string | null>(null);
   useEffect(() => {
@@ -105,6 +109,7 @@ export function CallEventSheet({
       setTypeId(null);
       setHours(1);
       setRoleId(null);
+      setFileId(null);
     }
   }, [open]);
   const where = view
@@ -178,6 +183,9 @@ export function CallEventSheet({
                 />
               ))}
             </div>
+            {option.caseFile && (
+              <AttachCaseFile files={caseFiles} value={fileId} onChange={setFileId} />
+            )}
             <button
               type="button"
               onClick={() => setTypeId(null)}
@@ -209,7 +217,14 @@ export function CallEventSheet({
                   <Button
                     className="w-full"
                     pending={pending}
-                    onClick={() => onCall({ typeId: option.typeId, hours, roleId: role.roleId })}
+                    onClick={() =>
+                      onCall({
+                        typeId: option.typeId,
+                        hours,
+                        roleId: role.roleId,
+                        ...(option.caseFile && fileId ? { caseFileId: fileId } : {}),
+                      })
+                    }
                     data-testid="call-it"
                   >
                     {copy.together.call.button(role.name, role.energy)}
@@ -221,5 +236,47 @@ export function CallEventSheet({
         )}
       </div>
     </BottomSheet>
+  );
+}
+
+/**
+ * Slice 8 phase C, lane Q (design §4.3; tech design §3.5): the Headline Story's *Attach a Case File*:
+ * *No file* or one of the held files (the swing half again, the name in the headline). The server
+ * refuses a file on another party than the story's (`WRONG_PARTY`).
+ */
+function AttachCaseFile({
+  files,
+  value,
+  onChange,
+}: {
+  files: ReadonlyArray<{ id: string; name: string; party: string }>;
+  value: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const chosen = files.find((f) => f.id === value) ?? null;
+  return (
+    <fieldset className="flex flex-col gap-1 border-t border-dotted border-faint pt-2" data-testid="attach-case-file">
+      <legend className="label-caps text-[11px] font-semibold">{copy.life.expose.attachFile}</legend>
+      <div role="radiogroup" aria-label={copy.life.expose.attachFile} className="flex flex-wrap gap-1.5">
+        {[{ id: null as string | null, label: copy.life.expose.attachClear }, ...files.map((f) => ({ id: f.id as string | null, label: `${f.name} · ${f.party}` }))].map((o) => (
+          <button
+            key={o.id ?? 'none'}
+            type="button"
+            role="radio"
+            aria-checked={value === o.id}
+            onClick={() => onChange(o.id)}
+            className={cx(
+              'label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-2.5 text-[11px]',
+              value === o.id ? 'bg-ink text-paper' : 'bg-paper hover:bg-paper-2',
+            )}
+            data-testid="attach-option"
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {files.length === 0 && <span className="font-mono text-[11.5px] text-muted">{copy.life.expose.attachNone}</span>}
+      {chosen && <span className="font-mono text-[11.5px] text-petrol">{copy.life.expose.attached(chosen.name)}</span>}
+    </fieldset>
   );
 }

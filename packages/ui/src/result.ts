@@ -1,5 +1,6 @@
 import type { ActionResult } from '@irongate/rules';
 import { formatSigned } from './format';
+import { lifeQActionLines } from './lifeQLines';
 
 /**
  * Review 5 (answers §17, §18 Q1–Q3; tech design §4.1): the compact result modal's pure halves. What
@@ -86,7 +87,9 @@ export type KnockOnKey =
   | 'pc'
   | 'standing'
   | 'branch'
-  | 'item';
+  | 'item'
+  // Slice 8 lane Q: the exposé's lines, Dossier entries, a patron's Favour, the Requests.
+  | 'life';
 
 /**
  * One knock-on line: its key (for the priority), whether it prints as a line or a card, and an `id`
@@ -115,6 +118,8 @@ export const SHORT_SCREEN = '(max-height: 700px)';
 const PRIORITY: readonly KnockOnKey[] = [
   'placeIt',
   'card',
+  // Slice 8 lane Q: an exposé's lines are its story; a Dossier entry is the thing that happened.
+  'life',
   'heat',
   'record',
   'order',
@@ -168,6 +173,7 @@ export function knockOnLines(r: ActionResult, o: { statPending: number }): Knock
   if (agi && agi.quarters > 0 && !(e.stat && e.stat.stat === 'agi')) add('trained', 'agility');
   add('energy', 'energy');
   if (s?.remembered) add('firstMission', 'remembered');
+  for (const x of lifeQActionLines(r)) add('life', x.id);
 
   const rank = (l: KnockOnLine) =>
     r.stamp === 'trained' && l.key === 'trained' ? -1 : PRIORITY.indexOf(l.key);

@@ -37,6 +37,7 @@ import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
 import { buffReceiptLines, lifeLines } from '../lifeLines';
+import { exposeStamp, lifeQActionLines, lifeQPoliticalLines } from '../lifeQLines';
 import { MinderResultRow } from './Minder';
 import { Picture } from './Picture';
 import { BottomSheet } from './Sheets';
@@ -333,6 +334,8 @@ function PoliticalBody({
     });
   }
   lines.push(...life.lines);
+  // Slice 8 lane Q (tech design §10.1, §10.3): the Dossier, Legacy, a patron's Favour, the Requests.
+  lines.push(...lifeQPoliticalLines(r));
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
   if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
@@ -711,7 +714,8 @@ function ResultBody({
     }
     setSeen({ r, stats: statPoints?.stats ?? null });
   }
-  const stamp = stampFor(r);
+  // Slice 8 lane Q (screens §7): the exposé's stamp is *Printed*, *Page three* or *Spiked*.
+  const stamp = exposeStamp(r) ?? stampFor(r);
   const street = r.street ?? null;
   const toneText =
     stamp.tone === 'success' ? 'text-success' : stamp.tone === 'failure' ? 'text-failure' : 'text-partial';
@@ -1070,6 +1074,11 @@ function knockOnNodes(
       }
       case 'remembered':
         return line(l.id, copy.risk.remembered, 'effect-remembered');
+      // Slice 8 lane Q: the exposé's lines, the Dossier's entries, a patron's Favour, the Requests.
+      case 'life': {
+        const x = lifeQActionLines(r).find((y) => y.id === l.id);
+        return x ? line(l.id, x.text, `effect-${l.id.split(':')[1] ?? 'life'}`) : null;
+      }
       case 'order-signed': {
         // Review 1 (answers §6): an order done is a signed line from the secretary.
         const x = e.orders.find((y) => y.id === ref);

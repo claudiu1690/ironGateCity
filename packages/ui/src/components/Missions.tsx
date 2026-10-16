@@ -192,6 +192,11 @@ export function MissionTicket({
     ...bonusTags,
   ].map((text) => ({ text }));
   if (order) chips.push({ text: order, order: !orderDone });
+  // Slice 8 lane Q (screens §14): a society call's door and its Favour (*no Party XP · +2 Favour with …*).
+  if (m.society) {
+    chips.unshift({ text: m.society.needsLine });
+    if (m.society.tag) chips.push({ text: m.society.tag });
+  }
   const capped = !lock && placeTags.some((t) => t.kind === 'pressureCapped');
   const first = m.remembered === null;
   const button = cx(
@@ -410,8 +415,8 @@ export interface MissionBriefingProps {
   /** "The Shipyard" (the kicker). */
   placeName: string;
   energy: { value: number; nextTickAt: number | null };
-  /** The sticky button: start the mission with this way. */
-  onConfirm: (wayId: string) => void;
+  /** The sticky button: start the mission with this way (slice 8: the morgue file's chosen name). */
+  onConfirm: (wayId: string, subjectId?: string) => void;
   pending?: boolean;
   notice?: string;
 }
@@ -433,10 +438,14 @@ export function MissionBriefing({
   notice,
 }: MissionBriefingProps) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [subject, setSubject] = useState<string | null>(null);
   // A new mission (or the sheet opened again) starts with no row selected.
   const missionId = m?.id ?? null;
   useEffect(() => {
-    if (open) setSelected(null);
+    if (open) {
+      setSelected(null);
+      setSubject(null);
+    }
   }, [open, missionId]);
   // QA m8: the briefing opens from a ticket's button, not a Radix trigger, so Radix has nothing to give
   // focus back to and it fell to <body>. The opener is taken before the focus moves into the sheet
@@ -453,6 +462,8 @@ export function MissionBriefing({
   );
   const way = ways.find((w) => w.id === selected) ?? null;
   const short = energy.value < m.energy;
+  // Slice 8 lane Q (§21.1 Q12): the morgue file asks whose envelope first.
+  const needsSubject = !!m.subject && m.subject.names.length > 0 && subject === null;
   const label = short
     ? copy.risk.needsEnergy(m.energy)
     : way
@@ -510,6 +521,30 @@ export function MissionBriefing({
                 />
               ))}
             </div>
+            {m.subject && (
+              <fieldset className="flex flex-col gap-1.5" data-testid="briefing-subject">
+                <legend className="label-caps pb-1 text-[11px] font-semibold">{m.subject.prompt}</legend>
+                <div role="radiogroup" aria-label={m.subject.prompt} className="flex flex-wrap gap-1.5">
+                  {m.subject.names.map((n) => (
+                    <button
+                      key={n.subjectId}
+                      type="button"
+                      role="radio"
+                      aria-checked={subject === n.subjectId}
+                      onClick={() => setSubject(n.subjectId)}
+                      disabled={pending}
+                      className={cx(
+                        'label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-2.5 text-[11px]',
+                        subject === n.subjectId ? 'bg-ink text-paper' : 'bg-paper hover:bg-paper-2',
+                      )}
+                      data-testid="briefing-subject-option"
+                    >
+                      {n.name}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             {notice && (
               <p
                 role="status"
@@ -523,8 +558,8 @@ export function MissionBriefing({
           <div className="shrink-0 border-t border-track bg-paper px-4 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
             <button
               type="button"
-              onClick={() => way && !short && !pending && onConfirm(way.id)}
-              disabled={!way || short || pending}
+              onClick={() => way && !short && !pending && !needsSubject && onConfirm(way.id, subject ?? undefined)}
+              disabled={!way || short || pending || needsSubject}
               aria-busy={pending || undefined}
               className="label-caps flex min-h-12 w-full cursor-pointer items-center justify-center bg-ink px-4 py-1 text-center text-[13px] leading-tight text-paper hover:bg-ink-2 disabled:cursor-not-allowed disabled:bg-faint"
               data-testid="briefing-confirm"

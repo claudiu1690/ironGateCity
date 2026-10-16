@@ -491,6 +491,14 @@ function DevPanelOn({ status }: { status: DevStatus }) {
             />
           )}
 
+          {status.life && status.character && (
+            <LifeControls
+              disabled={act.isPending || !status.character}
+              busy={busy}
+              run={(action) => act.mutate(action)}
+            />
+          )}
+
           {status.together !== undefined && status.character && (
             <TogetherControls
               disabled={act.isPending || !status.character}
@@ -893,6 +901,65 @@ function RiskControls({
       >
         Lift the bar
       </Button>
+    </div>
+  );
+}
+
+/** Slice 8 (tech design §8.7, §24.9): the life buttons (lanes 1 and 2); each calls a hook's writer, then the settle. */
+const LIFE_BUTTONS: ReadonlyArray<[DevAction, string]> = [
+  ['dossierThree', 'Three entries on a rival name'],
+  ['dossierStale', 'Make it stale'],
+  ['dossierNext', 'Next tap lands an entry'],
+  ['dossierFile', 'A Case File now'],
+  ['rentToday', 'Rent due today'],
+  ['rentOut', 'Rent ran out'],
+  ['legacy20', 'Give me 20 Legacy'],
+  ['partyCoat', 'Give me a party coat'],
+  ['greatcoatHat', 'The greatcoat and the hat'],
+  ['pressKit', 'The press pass and the camera'],
+  ['forgedPapers', 'Give me forged papers'],
+  ['doorman', 'A doorman'],
+  ['steward', 'A steward'],
+  ['minder', 'A minder'],
+  ['minderLastDay', "His last day"],
+  ['minderLapse', 'He goes home'],
+  ['wellFed5', 'Well fed, 5 minutes left'],
+  ['spirits9', 'Nine missions in hand'],
+  ['roundsUsed', 'Three rounds today'],
+  ['crane29', 'Crane at 29'],
+  ['crane59', 'Crane at 59'],
+  ['crane89', 'Crane at 89'],
+  ['marr29', 'Marr at 29'],
+  ['marr59', 'Marr at 59'],
+  ['marr89', 'Marr at 89'],
+  ['patronVisited', 'First visit two days ago'],
+];
+
+function LifeControls({
+  disabled,
+  busy,
+  run,
+}: {
+  disabled: boolean;
+  busy: (action: DevAction) => boolean;
+  run: (action: DevAction) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-1.5 border-t border-paper-2 px-3 pt-2.5 pb-2" data-testid="dev-life">
+      <h3 className="label-caps col-span-2 text-[10px] text-muted">Life</h3>
+      {LIFE_BUTTONS.map(([action, label]) => (
+        <Button
+          key={action}
+          variant="outline"
+          className="px-2 text-[12px]"
+          disabled={disabled}
+          pending={busy(action)}
+          onClick={() => run(action)}
+          data-testid={`dev-btn-${action}`}
+        >
+          {label}
+        </Button>
+      ))}
     </div>
   );
 }

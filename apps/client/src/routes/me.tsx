@@ -33,6 +33,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { MeBuffs, MeMinder, MeWardrobe } from '../features/life/MeLife';
+import { MeHome, MeLegacy, MePatrons } from '../features/dossier/MeLifeQ';
 import { MeOffices } from '../features/nation/MeOffices';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
@@ -251,7 +252,10 @@ export function MePage() {
         {/* Slice 8 (screens §2, §16): the Wardrobe; then Patrons and Where you sleep (lane 2's), then
             *Walking with you* (screens §18.2), then Legacy (lane 2's). */}
         <MeWardrobe />
+        <MePatrons />
+        <MeHome />
         <MeMinder />
+        <MeLegacy />
 
         {c.ambition.id && (
           <Card title="Ambition">

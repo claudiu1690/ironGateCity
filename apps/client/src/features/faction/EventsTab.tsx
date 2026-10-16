@@ -39,6 +39,9 @@ export function EventsTab() {
   // The capital's call sheet lists the open district's events (client memory, tech §22.1 Q6).
   const districtId = character ? lastDistrict(character.cityId) : null;
   const sheet = useQuery({ ...trpc.events.callSheet.queryOptions({ districtId }), enabled: sheetOpen });
+  // Slice 8 lane Q (tech design §3.5): the Headline Story's held Case Files (another party's names).
+  const takesFile = !!sheet.data?.options.some((o) => o.caseFile);
+  const dossier = useQuery({ ...trpc.dossier.get.queryOptions(), enabled: sheetOpen && takesFile });
   const act = useEventAct();
   const [called, setCalled] = useState<string | null>(null);
   useEffect(() => {
@@ -77,7 +80,7 @@ export function EventsTab() {
   const rank3 = ladder[2] ?? 'Rank 3';
   const energyOf = (eventId: string) => character.events?.open.find((o) => o.eventId === eventId)?.energy ?? 0;
 
-  const onCall = (input: { typeId: string; hours: EventHours; roleId: string }) => {
+  const onCall = (input: { typeId: string; hours: EventHours; roleId: string; caseFileId?: string }) => {
     void act
       .run('call', (idempotencyKey) =>
         trpcClient.events.callEvent.mutate({ ...input, districtId, idempotencyKey }),
@@ -205,6 +208,9 @@ export function EventsTab() {
         ladder={ladder}
         energy={character.energy.value}
         onCall={onCall}
+        caseFiles={(dossier.data?.caseFiles ?? [])
+          .filter((f) => f.status === 'held' && f.factionId !== null && f.factionId !== character.factionId)
+          .map((f) => ({ id: f.id, name: f.name, party: f.factionId ? (character.factionNames?.[f.factionId] ?? f.factionId) : '' }))}
         pending={act.pending === 'call'}
         notice={act.error ? (eventNotice(act.error) ?? null) : null}
       />

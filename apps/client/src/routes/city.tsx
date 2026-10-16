@@ -73,6 +73,7 @@ import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { PlaceLifeCards } from '../features/life/PlaceLife';
+import { PlaceDossierCards } from '../features/dossier/PlaceDossier';
 import { usePetitionCard } from '../features/nation/usePetitionCard';
 import { useRuleVote } from '../features/council/useRuleVote';
 import { noticeFor } from '../features/game/errors';
@@ -1410,6 +1411,8 @@ export function CityPage() {
           // Lodgings, *In the cells now* and the Town Hall's blocks follow in their phases.
           cards={[
             // Slice 8 (screens §4, §18): shops, someone to walk with you, the bar, the back room; above Jobs.
+            // Slice 8 lane Q (screens §6.3, §7, §8.1): the patron first, the exposé's ticket, the station's man.
+            <PlaceDossierCards key="dossier" locationId={sheetPlace.id} kind={sheetPlace.kind} open={sheetOpen} act={act} />,
             <PlaceLifeCards key="life" locationId={sheetPlace.id} open={sheetOpen} act={act} />,
             <JobsCard
               key="jobs"
@@ -1618,8 +1621,14 @@ export function CityPage() {
         mission={briefing ? (c.locations.find((l) => l.id === briefing.locationId)?.missions?.find((m) => m.id === briefing.mission.id) ?? briefing.mission) : null}
         placeName={briefing?.placeName ?? ''}
         energy={energy}
-        onConfirm={(wayId) =>
-          briefing && missionStart.start({ locationId: briefing.locationId, missionId: briefing.mission.id, wayId })
+        onConfirm={(wayId, subjectId) =>
+          briefing &&
+          missionStart.start({
+            locationId: briefing.locationId,
+            missionId: briefing.mission.id,
+            wayId,
+            ...(subjectId ? { subjectId } : {}),
+          })
         }
         pending={missionStart.isPending}
         notice={briefingOpen && missionStart.error ? noticeFor(missionStart.error) : undefined}

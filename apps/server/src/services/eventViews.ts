@@ -461,6 +461,8 @@ export async function callSheet(deps: {
       venueName: venue.location.name,
       roles: page.roles,
       energyOfRoles: type.roles.reduce((s, r) => s + r.energy, 0),
+      // Slice 8 lane Q: the Headline Story's *Attach a Case File* (`events.callEvent`'s `caseFileId`).
+      ...(type.special === 'againstLeader' ? { caseFile: true } : {}),
       opinionUpTo: page.pays.opinionUpTo,
       here,
       goTo: here
