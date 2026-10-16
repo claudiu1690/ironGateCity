@@ -44,6 +44,8 @@ updated: 2026-10-16
 
 ## Status
 
+**Phase C, lane Q (16 Oct 2026): on screen** (`5510772`): the patron's card on Herald House's and the Pier Hotel's sheets (`PatronCard` in `packages/ui/src/components/Patron.tsx`; `patron.visit` on its first showing, Gift, the Requests, the Confidant's favour with Crane's Issue sheet, the perks), the Me tab's Patrons block (`life.me().patrons`), the paper's Request, informant and gossip Letters, a society ticket's door and Favour, the morgue file's name picker in the briefing. E2E `patron.spec.ts`.
+
 **Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Built, QA to come:** mates' bail and visits ([[Slice 6 Together|slice 6]] phase B). **Slice 8, building:** Crane and Marr's rules and content (phase A) and the server (T13, 16 Oct 2026: Favour from gifts, society calls, Requests and chapters; the Confidant's favours; Protégé's piece, Legacy and endorsement) are built; the card's screen is phase C ([[Slice 8 A Life in the City|slice 8]]). A Request counts a Success or a Partial, never a Failure (design §24.9). **Post-MVP:** the other three patrons, new patrons each season.
 
 ## Decisions

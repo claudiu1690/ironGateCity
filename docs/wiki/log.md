@@ -9,6 +9,14 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase C, lane Q (the Dossier, the exposé, patrons, home, Legacy, the paper)
+
+The client screens on lanes 2 and 1b's server: the Dossier tab, the station and the exposé, the Headline
+Story's Case File, the patron's card and the Me tab's Patrons, Where you sleep and Legacy blocks, the
+paper's life rows, the dev panel's Life buttons (`e01b84a`, `5510772`). Four e2e projects (`dossier`,
+`patron`, `home`, `chapter8`), all passing. Updated [[The Dossier]], [[Patronage and Favours]],
+[[Legacy]], [[Residence]], [[Slice 8 A Life in the City]].
+
 ## [2026-10-16] build | Slice 8 phase C, lane P (the Wardrobe, shops, bodyguards, the bar)
 
 The client screens on lane 1's server: the Me tab's Wardrobe block, chooser and full sheet; shop cards,

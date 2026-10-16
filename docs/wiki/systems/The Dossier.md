@@ -43,10 +43,13 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 - Rules: `packages/rules/src/dossier.ts` (capacity, freshness, `pickName`, `rollEntry`, binding, selling, turning, informant reports, the exposé's gate, difficulty, swing and rewards); views in `packages/rules/src/lifeViews.ts`.
 - Data: the `dossierEntries` collection (`packages/db/src/models/dossier.ts`; entries, Case Files and informants, one row each); `characters.expose`, `dossierBurns`, `dossierLastAt` / `dossierSeenAt`.
 - Server: `apps/server/src/services/dossierService.ts` (`landEntry`, the one helper every source calls in its own transaction; `dossier.get/seen/station/bind/sell/turn`; the Headline Story's attach / detach / spend); `exposeService.ts` (`expose.get/choose/attempt`); the settlement's informants and gossip in `lifeSettlement.ts`; router `apps/server/src/trpc/routers/dossier.ts`. Sources wired: tier-1 intelligence (`actionService.writeTier1`), the cells' and ward's taps, surveillance and theft (`missionService.writeMissionFinal`), *Feed him a story* (`travelService.choose`), a chapter's entry (`chapterLife.ts`). Society calls and the morgue file come with T13.
+- Client: `packages/ui/src/components/Dossier.tsx` (the tab, `NameCard`, `CaseFileCard`, the station's card and sheet, `ExposeStory`), `apps/client/src/routes/dossier.tsx` (`/dossier`, `/dossier/expose`), `apps/client/src/features/dossier/PlaceDossier.tsx` (the place cards), the result lines in `packages/ui/src/lifeQLines.ts`.
 - Content: the twenty lines in `packages/content/src/data/dossier.ts`; Brandauer in `people.ts`; the copy in `copy.ts` (`copy.life.dossier`, `.expose`); the paper's lines in `lifeHeadlines.ts`.
 - Client: only the disabled tab so far (`apps/client/src/components/AppShell.tsx`); the tab, the station sheet and the exposé are phase C (T21).
 
 ## Status
+
+**Phase C, lane Q (16 Oct 2026): on screen** (`5510772`): the *Dossier* tab (Names · Case Files · Informants, the dot), *Make a Case File*, the station's card and sheet, the press's ticket and the exposé's two steps with its *Printed* / *Page three* / *Spiked* modal and front page, the public line in every paper, *Attach a Case File* on the Headline Story's call sheet, the entry lines on every result. E2E `dossier.spec.ts`, `chapter8.spec.ts`.
 
 **Phase B, lane 2 (16 Oct 2026): the server is built** (T11, T12): entries from every source but society calls, Case Files, selling at a station, informants, the exposé with its swing in the name's town, the burn and Legacy +2, and the Headline Story's *Attach a Case File* (+50 % on the swing). The tab is phase C.
 

@@ -152,10 +152,18 @@ test.describe('phone 375×812', () => {
     await expect(page.getByTestId('me-rank')).toContainText(
       /^Red Collective · Recruit · \d+ \/ 400 to Activist$/,
     );
+    // Slice 8: the Me tab's Wardrobe, Patrons, Where you sleep and Legacy blocks load on their own
+    // queries (as the offices' ladder does); compare once every block is in.
+    const lifeBlocks = async () => {
+      for (const id of ['wardrobe', 'me-patrons', 'me-home', 'me-legacy']) await expect(page.getByTestId(id)).toBeVisible();
+      await page.waitForLoadState('networkidle');
+    };
+    await lifeBlocks();
     const meText = await page.locator('main').innerText();
 
     await page.reload();
     await expect(page.locator('main')).toContainText('Factory worker · 216 a day');
+    await lifeBlocks();
     expect(await page.locator('main').innerText()).toBe(meText);
 
     await page.getByRole('button', { name: 'Sign out' }).click();

@@ -44,6 +44,8 @@ Two different "homes" matter. Your **residence** is your **political home**: whe
 
 ## Status
 
+**Slice 8 phase C, lane Q (16 Oct 2026): the Me tab's *Where you sleep*** (`HomeCard`; buy the flat, pay a week or four, *Your flat waits*) and the desk's row; e2e `home.spec.ts`. The residence card's flat line on the place sheet is not on screen.
+
 **Slice 8 phase B, lane 2 (16 Oct 2026): the flat is built on the server** (`apps/server/src/services/homeService.ts`: `home.get/buyFlat/payRent`; ADR 0056). Rent is a day key; a lapse writes nothing and the flat waits; Rested +25 at the boundary while it counts (+10 the room), the cap +50; the paper's *Rent Due* and *The Flat Waits*. The Me tab's card is phase C.
 
 **Built:** residence and moving, district to district, and the Irongate lodgings ([[Slice 4 The Battleground|slice 4]]; the Lodgings card reworded in [[Review 4]]). **Designed, not built:** Clearwater as a residence with lodgings at the Rows (slice 7); the rented room's +10 Rested and the flat (slice 8).
