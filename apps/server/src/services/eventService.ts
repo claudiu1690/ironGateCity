@@ -51,7 +51,7 @@ import { buildReceipt, pageView } from './eventViews';
 import { addInfluence, addPoints, writeLedger } from './ledger';
 import { heatDoc, heatRateOn, heatTimerOf, isRivalGround, notFree } from './risk';
 import { residenceCityId, residenceCtx } from './residence';
-import { restedCapToday } from './modifiers';
+import { homeCapOf, restedCapToday } from './modifiers';
 import { runKeyedAction } from './keyedAction';
 import { withRequestKey } from './requestKey';
 import { t6 } from './togetherCopy';
@@ -167,7 +167,7 @@ async function commitTap(
   const today = dayKey(now);
   if (c.day.settled !== today) throw new DayChanged();
   const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-  const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
+  const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId, homeCapOf(c));
   const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
   const spent = spendEnergy({ value: p.value, rested: p.rested, updatedAt: p.updatedAt }, i.cost);
   if (!spent.ok) {
@@ -581,7 +581,7 @@ export async function signUpEvent(
     if (winner) return winner;
     throw gameError('PRECONDITION_FAILED', 'EVENT_CLOSED');
   }
-  const p = projectEnergy(energyState(c0), now0, ENERGY.max, restedCapToday(content, loaded.city, dayKey(now0), c0.room, c0.factionId));
+  const p = projectEnergy(energyState(c0), now0, ENERGY.max, restedCapToday(content, loaded.city, dayKey(now0), c0.room, c0.factionId, homeCapOf(c0)));
   const gate = signUpGate({
     slot: slotId,
     rank: c0.rank,
@@ -731,7 +731,7 @@ export async function withdrawEvent(
       );
       if (!ev) throw new GameError('NOT_SIGNED_UP');
       const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
+      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId, homeCapOf(c));
       const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const back = refundEnergy(p, s.energy, s.restedCovered, cap);
       const refund = { energy: back.value - p.value, rested: back.rested - p.rested };
@@ -908,7 +908,7 @@ export async function resolveInTx(
       restedCovered: s.restedCovered,
       orderBonus: s.orderBonus,
       firstToday,
-      values: wornStats(c, content),
+      values: wornStats(c, content, now),
       standingSuccesses: successes,
       standingLabel: `${namedStanding(content, ev.cityId, successes).name} in ${city.name}`,
       prefer: preferredStat(content, c.factionId),

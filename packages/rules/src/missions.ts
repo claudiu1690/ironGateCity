@@ -42,6 +42,8 @@ import { ORDER_PART, computeRewards, roundHalfUp } from './rewards';
 import type { LineShare } from './rewards';
 import { createRng } from './rng';
 import type { Rng } from './rng';
+import { personalShares } from './personal';
+import type { PersonalModifiers } from './personal';
 import { pickOpponent, runInChance } from './runIn';
 import type { CaughtResult, DayFlags, RunInOutcome } from './runIn';
 import { standingBonus, standingView } from './standing';
@@ -253,6 +255,8 @@ export function missionRisk(i: {
   night?: boolean;
   /** Slice 7 (ADR 0044): the laws' run-in percentages at the read (`runInPcts`). */
   pcts?: readonly number[];
+  /** Slice 8 (design §3.6): recognition on rival ground, so the ticket's line is the start's. */
+  recognition?: number;
 }): { heat: number; runInChance: number; marks: 0 | 1 | 2 | 3 } {
   const spec = MISSION_TYPES[i.type];
   const heat = (i.way.heat ?? spec.heat) * (i.rivalGround ? RIVAL_GROUND.heatFactor : 1);
@@ -265,6 +269,7 @@ export function missionRisk(i: {
     flags: i.flags,
     ...(i.night !== undefined ? { night: i.night } : {}),
     ...(i.pcts ? { pcts: i.pcts } : {}),
+    ...(i.recognition !== undefined ? { recognition: i.recognition } : {}),
   });
   return { heat, runInChance: runIn, marks: spec.marks };
 }
@@ -434,6 +439,13 @@ export interface MissionInput {
   nightRate?: boolean;
   /** Slice 7 (design §8, ADR 0050): the party controlling the place (a district, Clearwater): rivals' Heat +25 %. */
   controlledBy?: FactionId | null;
+  /**
+   * Slice 8 (ADR 0052, 0088; T9): what is worn, the perks and the bar's buffs: the Party XP parts and
+   * the buff shares at the start (the item rows come in through `bonuses`, as the ticket's).
+   */
+  personal?: PersonalModifiers;
+  /** Slice 8 (design §3.6, ADR 0052): `recognition().total` on rival ground, into the run-in's chance. */
+  recognition?: number;
 }
 
 /** The pure start of a mission, stored in the encounter while a run-in is pending (ADR 0032). */
@@ -542,6 +554,8 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
   const rolledOrders = advance(i.orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
   const droppedOrders = advance(i.orders, i.orderTemplates, descriptor, 'failure', ctx, i.now);
   const shares = rewardShares({ type: seenAs, givesFxp: spec.givesFxp, m, tier: 2 });
+  // Slice 8 (T9, ADR 0052, 0088): the personal parts after the place's, at the start (§24.10 Q4).
+  const own = personalShares(i.personal, 'mission', i.now);
   const factors = place && spec.opinion !== null ? swingFactors(seenAs, i.factionId, m, tagged) : [];
   const recordIronPct = { clean: 0, onFile: -10, repeat: -20, notorious: -30 }[i.record];
   const common = {
@@ -549,10 +563,10 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     energy: i.mission.energy,
     restedUsed: spent.restedUsed,
     costPaid: cost,
-    fxpShares: shares.fxp,
-    ironShares: shares.iron,
-    // Slice 7 (ADR 0044): a law's `xpPct` (scope missions).
-    ...(shares.xp.length > 0 ? { xpShares: shares.xp } : {}),
+    fxpShares: [...shares.fxp, ...own.fxp],
+    ironShares: [...shares.iron, ...own.iron],
+    // Slice 7 (ADR 0044): a law's `xpPct` (scope missions); slice 8 (T9): the bar's XP shares.
+    ...(shares.xp.length + own.xp.length > 0 ? { xpShares: [...shares.xp, ...own.xp] } : {}),
     opinionFactors: factors,
     recordIronPct,
     ...(i.nightRate ? { nightRate: true } : {}),
@@ -593,6 +607,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     ...(i.night !== undefined ? { night: i.night } : {}),
     // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew's at night).
     pcts: runInPcts(m, nightAtAct),
+    ...(i.recognition !== undefined ? { recognition: i.recognition } : {}),
   });
   const runRoll = street.roll100();
   const fires = i.force?.runIn === 'next' ? true : i.force?.runIn === 'never' ? false : runRoll <= chance;

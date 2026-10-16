@@ -80,7 +80,7 @@ import {
 } from './risk';
 import type { LoadedCharacter } from './dayService';
 import { addInfluence, addPoints, writeLedger } from './ledger';
-import { dayModifiers, restedCapToday } from './modifiers';
+import { dayModifiers, homeCapOf, restedCapToday } from './modifiers';
 import { politicsSummary } from './politicsService';
 import { keySeed } from './keyGuard';
 import { withRequestKey } from './requestKey';
@@ -586,7 +586,7 @@ export async function journeyView(
   // Review 4 (ADR 0075 §4): the card's content is kept until its moment; `cardAt` is sent at once.
   const cardAt = cardAtOf(j);
   const ev = j.card && cardOpen(j, now) ? content.journeyEvent(j.card.eventId) : undefined;
-  const values = wornStats(c, content);
+  const values = wornStats(c, content, now);
   const successes = standingSuccesses(c, j.to);
   const named = namedStanding(content, j.to, successes);
   const bonus = standingBonus(successes, `${named.name} in ${content.city(j.to)?.name ?? j.to}`);
@@ -918,7 +918,7 @@ export async function choose(deps: {
       const cost = ch.cost?.iron ?? 0;
       if (c.iron < cost) throw new GameError('NOT_ENOUGH_IRON', { iron: c.iron, cost });
 
-      const values = wornStats(c, content);
+      const values = wornStats(c, content, now);
       const successes = standingSuccesses(c, j.to);
       const named = namedStanding(content, j.to, successes);
       const bonus = standingBonus(successes, `${named.name} in ${content.city(j.to)?.name ?? j.to}`);
@@ -1039,7 +1039,7 @@ export async function choose(deps: {
       }
 
       // The character: the stake, XP and Party XP, Rested banked to the cap, the tally, the quote.
-      const cap = restedCapToday(content, loaded.city, today, c.room, c.factionId);
+      const cap = restedCapToday(content, loaded.city, today, c.room, c.factionId, homeCapOf(c));
       const energy = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const rested = Math.min(cap, energy.rested + (rw.rested ?? 0));
       const gains = applyGains(progressOf(c), { xp: rw.xp ?? 0, fxp: rw.fxp ?? 0, pc: 0 });

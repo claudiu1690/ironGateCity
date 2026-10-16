@@ -7,6 +7,7 @@ import {
   ordinanceOnDay,
   ordinanceSource,
   placeModifiers,
+  flatCounts,
   restedCapFor,
   rivalGroundOf,
   weekOf,
@@ -14,6 +15,7 @@ import {
 import type {
   DayKey,
   FactionId,
+  Flat,
   LiveIssue,
   ModifierSource,
   MoraleState,
@@ -22,6 +24,7 @@ import type {
   RivalGroundState,
 } from '@irongate/rules';
 import { lawSourcesFor } from './lawBook';
+import { residenceCityId } from './residence';
 
 /**
  * The day-constant modifiers of a place (ADR 0021, 0022, 0030): the sources in force in the city
@@ -184,16 +187,42 @@ export const roomRunsOn = (room: CharacterDoc['room'] | undefined, day: DayKey):
   !!room && room.fromDay <= day && day < room.untilDay;
 
 /**
+ * Slice 8 (T9, design §6, §7.2; ADR 0056): the flat and *A better night's sleep* in the Rested cap,
+ * read per day (a lapsed flat stops counting the day after its last paid day, with no write).
+ */
+export interface HomeCap {
+  flat: Flat | null;
+  residenceCityId: string;
+  perkSleep: number;
+}
+
+/** The character's flat, residence and perk for the Rested cap (`capOn`, `restedCapToday`). */
+export const homeCapOf = (
+  c: Pick<CharacterDoc, 'home' | 'legacy' | 'homeCityId' | 'residence'>,
+): HomeCap => ({
+  flat: c.home?.flat ?? null,
+  residenceCityId: residenceCityId(c),
+  perkSleep: c.legacy?.perks?.sleep ?? 0,
+});
+
+/**
  * ADR 0030 §5 (design §7.4): each day's Rested cap: 200 + the residence city's sources of that day +
- * a room while it runs. The base cap for a day older than the city's short history.
+ * a room while it runs. The base cap for a day older than the city's short history. Slice 8 (T9):
+ * the larger of a room and a counting flat (+50, never both), and the perk.
  */
 export function capOn(
   content: GameContent,
   city: CityState | null,
   room?: CharacterDoc['room'],
   actor?: FactionId,
+  home?: HomeCap,
 ): (day: DayKey) => number {
-  return (day) => restedCapFor(dayModifiers(content, city, day, actor), roomRunsOn(room, day));
+  return (day) =>
+    restedCapFor(dayModifiers(content, city, day, actor), {
+      room: roomRunsOn(room, day),
+      flat: home ? flatCounts(home.flat, home.residenceCityId, day) : false,
+      perkSleep: home?.perkSleep ?? 0,
+    });
 }
 
 /** Today's Rested cap (the residence city's sources and the room). */
@@ -203,6 +232,7 @@ export function restedCapToday(
   day: DayKey,
   room?: CharacterDoc['room'],
   actor?: FactionId,
+  home?: HomeCap,
 ): number {
-  return capOn(content, city, room, actor)(day);
+  return capOn(content, city, room, actor, home)(day);
 }

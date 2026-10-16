@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { Character, Journey } from '@irongate/db';
 import type { CharacterDoc, JourneyDoc } from '@irongate/db';
-import { PATROL } from '@irongate/rules';
+import { PATROL, asEquipment } from '@irongate/rules';
 import { inTransaction } from './txn';
 
 /**
@@ -21,8 +21,12 @@ export async function settleArrival(content: GameContent, journeyId: string, now
       { session },
     );
     if (moved.matchedCount === 0) return false;
-    const c = await Character.findById(j.characterId, { firstCapitalArrivalAt: 1 }).session(session).lean();
+    const c = await Character.findById(j.characterId, { firstCapitalArrivalAt: 1, outfits: 1 })
+      .session(session)
+      .lean<Pick<CharacterDoc, 'firstCapitalArrivalAt' | 'outfits'>>();
     const first = j.to === content.nation.capitalId && !c?.firstCapitalArrivalAt;
+    // Slice 8 (T9, ADR 0051; tech design §3.2): dressed for arrival: plain clothes at the station.
+    const dress = j.dress === 'plain' && c?.outfits?.plain ? asEquipment(c.outfits.plain) : null;
     await Character.updateOne(
       { _id: j.characterId, 'journey.id': j._id, 'journey.status': 'onTheWay' },
       {
@@ -30,6 +34,7 @@ export async function settleArrival(content: GameContent, journeyId: string, now
           cityId: j.to,
           'journey.status': 'arrived',
           ...(first ? { firstCapitalArrivalAt: j.arrivesAt } : {}),
+          ...(dress ? { equipment: dress, lastOutfit: 'plain' } : {}),
         },
         $inc: { version: 1 },
         // Review 5 (ADR 0081): no patrol stop within ten minutes of arriving by train.

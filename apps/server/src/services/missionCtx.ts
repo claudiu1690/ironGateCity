@@ -2,6 +2,7 @@ import type { City, GameContent, Location, Mission, Way } from '@irongate/conten
 import type { CharacterDoc, CityDoc, DistrictDoc } from '@irongate/db';
 import {
   dayKey,
+  heatState,
   isAgilityWay,
   issueTags,
   MISSION_TYPES,
@@ -17,6 +18,7 @@ import {
   rivalGroundIn,
   runInPcts,
   standingView,
+  tierOf,
   windowLock,
 } from '@irongate/rules';
 import type {
@@ -27,8 +29,11 @@ import type {
   DayKey,
   FactionId,
   HeatTimer,
+  MissionGateInput,
+  MissionGateReason,
   MissionInput,
   MissionRiskView,
+  PersonalModifiers,
   MissionSpec,
   MissionType,
   MissionTypeSpec,
@@ -38,7 +43,7 @@ import type {
   Stats,
   TrainableStat,
 } from '@irongate/rules';
-import { modifiersFor, restedCapToday } from './modifiers';
+import { modifiersFor, homeCapOf, restedCapToday } from './modifiers';
 import { residenceCityId, residenceCtx } from './residence';
 import { flagsToday, heatRateOn, heatTimerOf, recordLevelOf } from './risk';
 import {
@@ -51,6 +56,7 @@ import {
   wornStats,
 } from './views';
 import { nightAt } from './night';
+import { itemRows, personalOf, recognitionOf } from './personal';
 
 /**
  * Slice 5 (tech design §8.2–§8.3, ADR 0031): everything a mission needs about the player, the place
@@ -90,7 +96,7 @@ export interface MissionCtx {
   /** False for the target faction's own members: the mission is hidden from them (design §4.1). */
   offered: boolean;
   /** The first unmet gate (`missionGate`), or null. */
-  gate: { reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD'; need: number } | null;
+  gate: { reason: MissionGateReason; need: number } | null;
   /** The live Energy (by the seen-as type: Rally Permits 15 → 13). */
   energy: number;
   values: Stats;
@@ -115,6 +121,10 @@ export interface MissionCtx {
   descriptor: ActionDescriptor;
   /** The mission as `resolveMission` takes it. */
   spec: MissionSpec;
+  /** Slice 8 (T9, ADR 0052, 0088): what is worn, the perks and the bar's buffs. */
+  personal: PersonalModifiers;
+  /** Slice 8 (design §3.6): recognition at `now` on rival ground (0 off it). */
+  recognition: number;
 }
 
 /** The place a mission's gates read: an HQ's faction is its own, else the city's home faction. */
@@ -159,6 +169,11 @@ export function missionCtx(
   );
   const successes = standingSuccesses(c, city.id);
   const record = recordLevelOf(c, today);
+  const values = wornStats(c, content, now);
+  const personal = personalOf(c, content);
+  const rateOn = heatRateOn(content, docs.residence, c.factionId);
+  const heat = heatTimerOf(c);
+  const heatNow = projectHeat(heat, now, rateOn).value;
   const gate = missionGate({
     level: c.level,
     rank: c.rank,
@@ -166,11 +181,9 @@ export function missionCtx(
     record,
     mission,
     place: gatePlace(city, location),
-    // Slice 8 phase A: no society or patron input is passed yet, so only slice 5's four can come back.
-  }) as MissionCtx['gate'];
+    ...lifeGateInput(c, mission, location.id, { wornCha: values.cha, heatNow, today }),
+  });
 
-  const rateOn = heatRateOn(content, docs.residence, c.factionId);
-  const heat = heatTimerOf(c);
   const nightView = nightAt(now);
 
   const untagged: ActionDescriptor = {
@@ -203,12 +216,13 @@ export function missionCtx(
     gate,
     // Slice 7 (ADR 0044): the laws' missionEnergyDelta on the ticket.
     energy: missionEnergy(mission.energy, seenAs, m),
-    values: wornStats(c, content),
+    values,
     prefer: preferredStat(content, c.factionId),
     standing: { successes, names: content.standingNames, cityName: city.name },
-    bonuses: firstDayBonuses(content, c, city.id, today),
+    // Slice 8 (T9, ADR 0052): the right item's row, by the mission's own type (never its seen-as).
+    bonuses: [...firstDayBonuses(content, c, city.id, today), ...itemRows(personal, { missionType: mission.type })],
     heat,
-    heatNow: projectHeat(heat, now, rateOn).value,
+    heatNow,
     rateOn,
     record,
     recordIronPct: RECORD.ironPct[record],
@@ -227,6 +241,35 @@ export function missionCtx(
       locationKind: location.kind,
       pool: mission.pool,
     },
+    personal,
+    recognition: rivalGround ? recognitionOf(c, values.cha, now).total : 0,
+  };
+}
+
+/**
+ * Slice 8 (T9, design §3.7, §5.4): a society call's door (worn Charisma at the tap), once a day per
+ * place, refused while Wanted; and the introduction's patron tier (Marr's late table). Shared by the
+ * ticket and `mission.start`'s refusal so both read the same gate.
+ */
+export function lifeGateInput(
+  c: Pick<CharacterDoc, 'today' | 'patrons'>,
+  mission: Pick<Mission, 'society' | 'requires'>,
+  locationId: string,
+  at: { wornCha: number; heatNow: number; today: DayKey },
+): Pick<MissionGateInput, 'social' | 'patronTier'> {
+  const patronId = mission.requires?.patron?.id;
+  const favour = patronId ? ((c.patrons ?? []).find((p) => p.id === patronId)?.favour ?? 0) : 0;
+  return {
+    ...(mission.society
+      ? {
+          social: {
+            wornCha: at.wornCha,
+            calledToday: c.today.day === at.today && (c.today.calls ?? []).includes(locationId),
+            wanted: heatState(at.heatNow) === 'wanted',
+          },
+        }
+      : {}),
+    ...(patronId ? { patronTier: tierOf(favour) } : {}),
   };
 }
 
@@ -273,6 +316,7 @@ export function wayRisk(ctx: MissionCtx, way: Way): MissionRiskView {
     night: ctx.night,
     // Slice 7 (ADR 0044): the laws' run-in percentages (ctx.modifiers carries the laws).
     pcts: runInPcts(ctx.modifiers, ctx.night),
+    recognition: ctx.recognition,
   });
 }
 
@@ -307,7 +351,7 @@ export function missionInput(
     prefer: ctx.prefer,
     energy: energyState(c),
     now,
-    restedCap: restedCapToday(content, docs.residence, ctx.today, c.room, c.factionId),
+    restedCap: restedCapToday(content, docs.residence, ctx.today, c.room, c.factionId, homeCapOf(c)),
     standing: ctx.standing,
     orders: toOrdersState(c.orders),
     orderTemplates: content.ordersOf(c.factionId),
@@ -331,5 +375,8 @@ export function missionInput(
       policeId: police?.id ?? '',
     },
     ...(force ? { force } : {}),
+    // Slice 8 (T9): the personal shares and recognition (ADR 0052, 0088).
+    personal: ctx.personal,
+    recognition: ctx.recognition,
   };
 }

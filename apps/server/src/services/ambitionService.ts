@@ -96,7 +96,7 @@ function chapterScreen(
       progress: { step: 1, of: 3 },
     };
   }
-  const values = wornStats(c, content);
+  const values = wornStats(c, content, now);
   const energy = projectEnergy(energyState(c), now);
   const chosen = s.choose.choices.find((x) => x.id === c.ambition.choiceId);
   return {
@@ -258,7 +258,7 @@ export async function attemptChapter(deps: {
         {
           spec,
           approachId: input.approachId,
-          values: wornStats(c, content),
+          values: wornStats(c, content, now),
           energy: energyState(c),
           now,
           // eslint-disable-next-line no-restricted-properties -- the faction's home (the First day)

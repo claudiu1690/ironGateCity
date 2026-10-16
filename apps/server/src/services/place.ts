@@ -11,7 +11,7 @@ import type {
 } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { addInfluence, addPoints, cycleKeyOf, toThousandths, writeLedger } from './ledger';
-import { modifiersFor, restedCapToday } from './modifiers';
+import { modifiersFor, homeCapOf, restedCapToday } from './modifiers';
 import { residenceCityId } from './residence';
 import { DayChanged } from './txn';
 
@@ -62,7 +62,7 @@ export async function readPlace(
     district,
     modifiers,
     residenceCity,
-    restedCap: restedCapToday(content, residenceCity, today, c.room, c.factionId),
+    restedCap: restedCapToday(content, residenceCity, today, c.room, c.factionId, homeCapOf(c)),
     placeId: districtId ?? city.id,
     placeName: districtId ? (content.district(districtId)?.quarter.name ?? districtId) : city.name,
     rival: rivalGroundIn(modifiers),

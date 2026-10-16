@@ -24,6 +24,7 @@ import {
   jobPayWith,
   liveMarks,
   projectEnergyThrough,
+  restAtBoundary,
   projectHeat,
   seniorityStep,
   settleDays,
@@ -34,7 +35,8 @@ import {
   stipendBoundaries,
 } from '@irongate/rules';
 import { fadeDaysFor } from './lawBook';
-import type { DayKey, RivalGroundState } from '@irongate/rules';
+import type { DayKey, PersonalModifiers, Recognition, RivalGroundState } from '@irongate/rules';
+import { personalOf, recognitionOf } from './personal';
 import { Types } from 'mongoose';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
@@ -54,7 +56,7 @@ import { jobCityOf, residenceCityId } from './residence';
 import { buildEdition, riskEdition } from './edition';
 import { ensureArrived } from './journeyArrival';
 import type { NewEdition, RiskRead } from './edition';
-import { capOn, dayModifiers, moraleOf } from './modifiers';
+import { capOn, dayModifiers, homeCapOf, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import {
   energyState,
@@ -63,6 +65,7 @@ import {
   toOrdersState,
   welcomeDayOf,
   welcomeOrderIds,
+  wornStats,
 } from './views';
 
 /** What a settlement writes: the character's `$set` and `$inc`, the edition, the awards. */
@@ -127,7 +130,10 @@ export function computeSettlement(
   const contentJob = c.job ? content.job(c.job.id) : undefined;
   const pay = contentJob ? jobPay(contentJob, c.factionId) : null;
   // ADR 0030 §5: the residence city's sources and the room, wherever the character is.
-  const caps = capOn(content, city, c.room, c.factionId);
+  const caps = capOn(content, city, c.room, c.factionId, homeCapOf(c));
+  // Slice 8 (T9, design §6, ADR 0056): Rested at every boundary, the flat's 25 if it counted the
+  // night before, else the room's 10, banked up to that day's cap (once: the settlement re-bases).
+  const restOn = (boundaryDay: DayKey) => restAtBoundary(c.home?.flat ?? null, residenceCityId(c), boundaryDay);
   const s = settleDays({
     settled: c.day.settled,
     today,
@@ -150,6 +156,7 @@ export function computeSettlement(
       };
     },
     capOn: caps,
+    restOn,
   });
   if (!s) return null;
 
@@ -257,10 +264,11 @@ export function computeSettlement(
 
   // ADR 0021 §4: re-base stored Energy to the boundary when a day since the last write had a
   // Rested cap other than the base (Rest Day Order); otherwise the lazy projection is exact as is.
+  // Slice 8 (T9): a boundary crossed since the last write banks its Rested, so it re-bases too.
   const from = dayKey(c.energy.updatedAt.getTime());
-  let rebase = false;
+  let rebase = from < today;
   for (let d = Math.max(from, today - 40); d <= today && !rebase; d++) rebase = caps(d) !== RESTED.cap;
-  const rebased = rebase ? projectEnergyThrough(energyState(c), dayStart(today), caps) : null;
+  const rebased = rebase ? projectEnergyThrough(energyState(c), dayStart(today), caps, undefined, restOn) : null;
 
   const faction = content.faction(c.factionId);
   // Review 1 (§13.7): the welcome set on the welcome day (the creation day, and the next when created
@@ -575,6 +583,13 @@ export interface LoadedCharacter {
    * government), or null when the nation's day failed (national acts refuse `NATION_NOT_READY`).
    */
   nation: NationDoc | null;
+  /**
+   * Slice 8 (tech design §7.1, ADR 0052; T9): what is worn, the perks and the bar's buffs, built
+   * once per request; the item rows, the Party XP parts and the buff shares come from it.
+   */
+  personal: PersonalModifiers;
+  /** Slice 8 (design §3.6): recognition at the act (worn Charisma with the flat, office, night, Legacy). */
+  recognitionAt: (now: number) => Recognition;
 }
 
 /**
@@ -627,6 +642,8 @@ export async function loadCharacter(
     rivalGround: rival ? rivalGroundAt(content, doc.factionId, doc.cityId, here, dayKey(now)) : null,
     heldNow: held,
     nation,
+    personal: personalOf(doc, content),
+    recognitionAt: (at) => recognitionOf(doc, wornStats(doc, content, at).cha, at),
   };
 }
 

@@ -29,7 +29,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Auth } from '../auth';
 import { ensureCityDay, runCityDay } from '../services/cityDay';
 import { loadCharacter } from '../services/dayService';
-import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
+import { moraleOf, ordinanceIdOn, homeCapOf, restedCapToday } from '../services/modifiers';
 import { residenceCityId, residenceOf, residenceSpec } from '../services/residence';
 import { ballotCards } from '../services/ruleBallot';
 import { groundswellOn } from '../services/modifiers';
@@ -210,7 +210,7 @@ async function statusFor(
   // Slice 4 (ADR 0026): the residence city, whose council and paper are the character's.
   const city = c ? await ensureCityDay(content, residenceCityId(c), now) : null;
   const energy = c
-    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now), c.room, c.factionId))
+    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now), c.room, c.factionId, homeCapOf(c)))
     : null;
   // Slice 4 (tech design §8.7): where, where you live, the capital's districts, the Issues.
   const capitalId = content.nation.capitalId;

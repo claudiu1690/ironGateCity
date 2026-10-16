@@ -21,7 +21,7 @@ import type { SessionUser } from '../trpc/context';
 import { progressOf, progressSet } from './actionService';
 import { branchChannel, systemLine } from './chatOutbox';
 import { ensureSettled, loadCharacter } from './dayService';
-import { restedCapToday } from './modifiers';
+import { homeCapOf, restedCapToday } from './modifiers';
 import { withRequestKey } from './requestKey';
 import { residenceCityId } from './residence';
 import { healthDoc, healthTimerOf, isRivalGround, notFree } from './risk';
@@ -236,7 +236,7 @@ export async function visitMate(deps: Deps & { input: { characterId: string; ide
       if (c.day.settled !== today) throw new DayChanged();
       if (c.patrol?.card) throw refuse('PATROL_PENDING', { cityId: c.patrol.card.cityId });
       const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
+      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId, homeCapOf(c));
       const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const stay = m.held ? await Stay.findById(m.held.stayId).session(session).lean<StayDoc>() : null;
       const gate = visitGate({

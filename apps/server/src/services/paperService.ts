@@ -23,7 +23,7 @@ import { loadCharacter } from './dayService';
 import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { nationalSection } from './nationEdition';
 import { ordersTargetOf, pushedHeadline } from './pushTarget';
-import { restedCapToday } from './modifiers';
+import { homeCapOf, restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
 import { FRONT_PAGE_KIND, frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
 import {
@@ -55,7 +55,7 @@ export async function getPaper(deps: {
   if (!entry) throw new Error(`no edition for day ${today}: settlement should have printed it`);
   const city = content.city(entry.cityId);
   const date = new Date(dayStart(today));
-  const cap = restedCapToday(content, homeState, today, c.room, c.factionId);
+  const cap = restedCapToday(content, homeState, today, c.room, c.factionId, homeCapOf(c));
   const energy = projectEnergy(energyState(c), now, ENERGY.max, cap);
   // ADR 0023: the political sections are live at read; the front page on a winner's first paper
   // of the term; political headlines merged into the stored edition by priority.

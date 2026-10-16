@@ -1,6 +1,6 @@
 import type { GameContent, LocatedMission } from '@irongate/content';
 import { ActionLog, Character, Encounter } from '@irongate/db';
-import type { CharacterDoc, EncounterDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc, EncounterDoc } from '@irongate/db';
 import {
   addToTally,
   applyGains,
@@ -13,6 +13,7 @@ import {
   missionTarget,
   orderRewards,
   priceLines,
+  projectHeat,
   resolveMission,
   standingView,
   windowLock,
@@ -43,7 +44,7 @@ import { ensureSettled, loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
 import { runKeyedAction } from './keyedAction';
 import { keySeed } from './keyGuard';
-import { missionCtx, missionInput } from './missionCtx';
+import { lifeGateInput, missionCtx, missionInput } from './missionCtx';
 import { buildMissionResult } from './missionResult';
 import { nightAt } from './night';
 import type { RunInBlock } from './missionResult';
@@ -56,6 +57,7 @@ import {
   healthTimerOf,
   heatDoc,
   heatRateOn,
+  heatTimerOf,
   marksOf,
   notFree,
   recordLevelOf,
@@ -120,6 +122,8 @@ function missionRefusal(
   district: PlaceCtx['district'] | undefined,
   now: number,
   way: { id: string; window?: 'night' },
+  /** Slice 8 (T9): the residence city, for Heat's cooling (a society call refuses Wanted). */
+  residence: CityDoc | null = null,
 ): GameError | null {
   const blocked = notFree(c);
   if (blocked) return blocked;
@@ -153,6 +157,12 @@ function missionRefusal(
       kind: located.location.kind,
       ...(located.location.factionId ? { factionId: located.location.factionId } : {}),
     },
+    // Slice 8 (T9): the society door and the patron's introduction, as the ticket reads them.
+    ...lifeGateInput(c, located.mission, located.location.id, {
+      wornCha: wornStats(c, content, now).cha,
+      heatNow: projectHeat(heatTimerOf(c), now, heatRateOn(content, residence, c.factionId)).value,
+      today: dayKey(now),
+    }),
   });
   if (gate?.reason === 'RECORD') return new GameError('RECORD_BARRED', { locationId: located.location.id });
   if (gate) return new GameError('MISSION_LOCKED', { lock: gate.reason, need: gate.need });
@@ -209,7 +219,7 @@ export async function startMission(deps: {
       // Slice 5 (tech design §8.2): an arrived journey here is closed first (its ignore effects).
       c = await closeArrivalHere(content, session, c, now);
       const ctx = await readPlace(content, session, c, located, today);
-      const refused = missionRefusal(content, c, located, ctx.district, now, way);
+      const refused = missionRefusal(content, c, located, ctx.district, now, way, ctx.residenceCity);
       if (refused) throw refused;
 
       // QA M1: one seed per key, so a re-run of this transaction draws the same rolls.
@@ -385,7 +395,7 @@ export async function writeMissionFinal(i: {
     street: r ? r.outcome : 'none',
     heatAfter: s.heat.after + (r?.heatAdded ?? 0),
     record: recordLevelOf(c, today),
-    agi: wornStats(c, content).agi,
+    agi: wornStats(c, content, i.at).agi,
     rivalGround: s.rivalGround,
     rng: createRng(`${s.seed}:caught`),
     ...(held.force?.caught ? { force: held.force.caught } : {}),

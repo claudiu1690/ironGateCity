@@ -41,7 +41,7 @@ import { loadCharacter } from './dayService';
 import { ensureFixtures, placeIdOf, readEventPlace, typeOf, venueOfEvent } from './eventPlace';
 import type { EventPlaceRead } from './eventPlace';
 import { resolveEvent } from './eventService';
-import { restedCapToday } from './modifiers';
+import { homeCapOf, restedCapToday } from './modifiers';
 import { isRivalGround } from './risk';
 import { t6 } from './togetherCopy';
 import { assetView, energyState, namedStanding, preferredStat, rankTitle, standingSuccesses, toCharacterView, wornStats } from './views';
@@ -156,9 +156,9 @@ export async function pageView(
     energyState(viewer),
     now,
     ENERGY.max,
-    restedCapToday(content, ctx.residenceCity ?? null, dayKey(now), viewer.room, viewer.factionId),
+    restedCapToday(content, ctx.residenceCity ?? null, dayKey(now), viewer.room, viewer.factionId, homeCapOf(viewer)),
   );
-  const values = wornStats(viewer, content);
+  const values = wornStats(viewer, content, now);
   const successes = standingSuccesses(viewer, ev.cityId);
   const named = namedStanding(content, ev.cityId, successes);
   const gateFor = (slot: string, cost: number, slotFree: boolean) => {

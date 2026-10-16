@@ -33,7 +33,7 @@ import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { ensureSettled, loadCharacter } from './dayService';
 import { assertFree, notFree } from './risk';
-import { dayModifiers, restedCapToday } from './modifiers';
+import { dayModifiers, homeCapOf, restedCapToday } from './modifiers';
 import { politicsSummary, weekdayName } from './politicsService';
 import { withRequestKey } from './requestKey';
 import { isContested, openResidences, residenceCtx, residenceOf } from './residence';
@@ -128,7 +128,7 @@ export function lodgingsView(
     tap: tap.kind === 'paidAhead' ? 'notYet' : tap.kind,
     renewFromDay: tap.kind === 'paidAhead' ? tap.renewFromDay : null,
     cap: {
-      now: restedCapToday(content, docs.residence, today, c.room, c.factionId),
+      now: restedCapToday(content, docs.residence, today, c.room, c.factionId, homeCapOf(c)),
       with: restedCapToday(content, docs.residence, today, {
         cityId: ROOM.cityId,
         fromDay: today,
@@ -214,7 +214,7 @@ function rebase(content: GameContent, c: CharacterDoc, city: CityDoc | null, now
     energyState(c),
     now,
     ENERGY.max,
-    restedCapToday(content, city, dayKey(now), c.room, c.factionId),
+    restedCapToday(content, city, dayKey(now), c.room, c.factionId, homeCapOf(c)),
   );
   return { 'energy.value': e.value, 'energy.updatedAt': new Date(e.updatedAt), rested: e.rested };
 }

@@ -152,3 +152,18 @@ export function buffShares(
 /** §24.10 Q3: a mission that reaches its rewards spends one; a tier-1 action none. */
 export const spendSpirits = (b: Buffs, kind: 'action' | 'mission'): Buffs =>
   kind === 'mission' && b.spirits > 0 ? { ...b, spirits: b.spirits - 1 } : b;
+
+/**
+ * Phase B (T9): every personal share of a tier-1 action or a mission, beside the place's
+ * (`rewardShares`): the items' and the perk's Party XP parts, and the bar's XP and Iron shares at the
+ * act's `at`. The callers concatenate them with the place's, each rounded on its own line (GDD §5.5).
+ */
+export function personalShares(
+  p: PersonalModifiers | undefined,
+  kind: 'action' | 'mission',
+  at: number,
+): { fxp: LineShare[]; xp: LineShare[]; iron: LineShare[] } {
+  if (!p) return { fxp: [], xp: [], iron: [] };
+  const buff = buffShares(p, kind, at);
+  return { fxp: personalFxpShares(p, kind), xp: buff.xp, iron: buff.iron };
+}

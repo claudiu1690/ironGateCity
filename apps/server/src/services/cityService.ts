@@ -17,6 +17,7 @@ import {
   OPINION_FLOORS,
   RIVAL_GROUND,
   actionEnergy,
+  perkCanvassEnergy,
   averageShares,
   barredByRecord,
   placeOf,
@@ -97,6 +98,7 @@ import {
   wornStats,
 } from './views';
 import { nightAt } from './night';
+import { itemRows, personalOf } from './personal';
 import { patrolCityView } from './patrol';
 
 /**
@@ -388,7 +390,7 @@ export async function getCityView(
   const districtDocs = districted
     ? new Map((await District.find({ cityId: city.id }).lean<DistrictDoc[]>()).map((d) => [d._id, d]))
     : new Map<string, DistrictDoc>();
-  const values = wornStats(c, content);
+  const values = wornStats(c, content, now);
   const difficulty = tier1Difficulty(city.role);
   const today = dayKey(now);
   const successes = standingSuccesses(c, city.id);
@@ -398,6 +400,7 @@ export async function getCityView(
   const liveOrders: OrdersState = orders.day === today ? orders : { day: today, items: [], allDoneAt: null };
   // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
   const firstDay = firstDayBonuses(content, c, city.id, today);
+  const personal = personalOf(c, content);
   const prefer = preferredStat(content, c.factionId);
   const cityMods = modifiersFor(content, state, c.factionId, today, { cityId: city.id });
   const modsAt = (quarterId: string | undefined): PlaceModifiers =>
@@ -600,7 +603,7 @@ export async function getCityView(
           ) {
             locked = { reason: 'STANDING', need: action.requires.standing };
           }
-          const cost = actionEnergy(action.energy, action.type, m);
+          const cost = actionEnergy(action.energy, action.type, m, perkCanvassEnergy(personal.perks, action.type));
           // Slice 4 (screens §5.2): Issue · Close race · Comeback · Members only.
           const placeTags: PlaceTagView[] = [];
           for (const t of place ? issueTags(place.issues, descriptor) : []) {
@@ -634,6 +637,8 @@ export async function getCityView(
               difficulty,
               bonuses: [
                 ...firstDay,
+                // Slice 8 (T9, ADR 0052): the right item's row (*{Item} · better odds*).
+                ...itemRows(personal, { tier1Type: action.type }),
                 ...(bonus ? [bonus] : []),
                 ...ordinanceCheckBonuses(action.type, m),
                 ...placeCheckBonuses(action.type, m),

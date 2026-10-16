@@ -1,6 +1,7 @@
 import { isCheckedAction, isWelcomeAction } from '@irongate/content';
 import type { Action, City, GameContent, Location, Quarter } from '@irongate/content';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
+import { flatChaOf } from './personal';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import { Types } from 'mongoose';
 import {
@@ -39,7 +40,7 @@ import {
   weekOf,
   wornCha,
 } from '@irongate/rules';
-import { liveIssuesOf, restedCapToday } from './modifiers';
+import { liveIssuesOf, homeCapOf, restedCapToday } from './modifiers';
 import { recordLevelOf, riskView } from './risk';
 import type { LiveIssue } from '@irongate/rules';
 import type {
@@ -69,20 +70,27 @@ const NO_EQUIPMENT: Equipment = { clothing: null, accessory: null, document: nul
 
 /**
  * Stats as a check sees them (ADR 0014): CHA is worn, the origin's CHA base plus what is equipped,
- * computed on read. The only place checks, job locks and views get `cha` from.
+ * computed on read. The only place checks, job locks and views get `cha` from. Slice 8 (T9, ADR
+ * 0056): at `now`, +2 while standing in a counting flat's city (no `now`: no flat part).
  */
 export function wornStats(
-  doc: Pick<CharacterDoc, 'stats' | 'inventory' | 'equipment'>,
+  doc: Pick<CharacterDoc, 'stats' | 'inventory' | 'equipment'> &
+    Partial<Pick<CharacterDoc, 'home' | 'cityId' | 'homeCityId' | 'residence'>>,
   content: GameContent,
+  now?: number,
 ): Stats {
   const equipped = equippedItems(doc.inventory ?? [], doc.equipment ?? NO_EQUIPMENT, (id) =>
     content.itemSpec(id),
   );
+  const flat =
+    now !== undefined && doc.home?.flat && doc.cityId !== undefined
+      ? flatChaOf(doc as Parameters<typeof flatChaOf>[0], now)
+      : 0;
   return {
     str: doc.stats.str,
     int: doc.stats.int,
     agi: doc.stats.agi,
-    cha: wornCha(doc.stats.chaBase, equipped),
+    cha: wornCha(doc.stats.chaBase, equipped, flat),
   };
 }
 
@@ -734,7 +742,7 @@ export function toCharacterView(
   ctx: { city?: CityDoc | null; politicsWaiting?: 0 | 1 } = {},
 ): CharacterView {
   const today = dayKey(now);
-  const restedCap = restedCapToday(content, ctx.city ?? null, today, doc.room, doc.factionId);
+  const restedCap = restedCapToday(content, ctx.city ?? null, today, doc.room, doc.factionId, homeCapOf(doc));
   const energy = projectEnergy(energyState(doc), now, ENERGY.max, restedCap);
   const bounds = rankBounds(doc.rank);
   const faction = content.faction(doc.factionId);
@@ -757,7 +765,7 @@ export function toCharacterView(
     // eslint-disable-next-line no-restricted-properties -- the faction's home, as the view says
     homeCityId: doc.homeCityId,
     cityId: doc.cityId,
-    stats: wornStats(doc, content),
+    stats: wornStats(doc, content, now),
     energy: {
       value: energy.value,
       max: energy.max,

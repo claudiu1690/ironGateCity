@@ -50,6 +50,7 @@ import { assertFree, flagsToday, heatRateOn, heatTimerOf, isRivalGround, notFree
 import { pendingView, startRunInInTx, storedEncounterResult } from './streetService';
 import type { HeldAction } from './streetService';
 import { nightAt } from './night';
+import { itemRows, personalOf, recognitionOf } from './personal';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { closeArrivalInTx } from './travelService';
@@ -376,6 +377,8 @@ async function rivalRunIn(i: {
     night,
     // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew at night).
     pcts: runInPcts(lawModifiers(content, today, c.factionId), night),
+    // Slice 8 (T9, design §3.6): recognised on rival ground.
+    recognition: recognitionOf(c, wornStats(c, content, now).cha, now).total,
   });
   const street = createRng(`${i.seed}:runIn`);
   const roll = street.roll100();
@@ -451,6 +454,8 @@ export function computeTier1(i: {
 }): ResolveResult {
   const { content, c, located, action, ctx } = i;
   const { city, location } = located;
+  // Slice 8 (T9, ADR 0052): what is worn, the perks and the buffs; the item rows by the act's type.
+  const personal = personalOf(c, content);
   return resolveTier1Action(
     {
       action: {
@@ -466,7 +471,7 @@ export function computeTier1(i: {
         locationKind: location.kind,
       },
       cityRole: city.role,
-      values: wornStats(c, content),
+      values: wornStats(c, content, i.now),
       energy: energyState(c),
       now: i.now,
       times: i.times,
@@ -479,8 +484,12 @@ export function computeTier1(i: {
       modifiers: ctx.modifiers,
       restedCap: ctx.restedCap,
       // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
-      bonuses: firstDayBonuses(content, c, city.id, ctx.today),
+      bonuses: [
+        ...firstDayBonuses(content, c, city.id, ctx.today),
+        ...itemRows(personal, { tier1Type: action.type }),
+      ],
       prefer: preferredStat(content, c.factionId),
+      personal,
       ...(i.forceOutcome ? { forceOutcome: i.forceOutcome } : {}),
       ...(i.forceRoll !== undefined ? { forceRoll: i.forceRoll } : {}),
       ...(i.forceRolls ? { forceRolls: i.forceRolls } : {}),

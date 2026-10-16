@@ -18,6 +18,8 @@ import {
 import type { Modifiers, SwingFactor } from './ordinances';
 import type { EnergyProjection, EnergyState } from './energy';
 import { advanceOrders, itemSpec, orderMatches } from './orders';
+import { perkCanvassEnergy, personalShares } from './personal';
+import type { PersonalModifiers } from './personal';
 import type { MatchCtx } from './orders';
 import { computeRewards, sumRewards } from './rewards';
 import type { Rng } from './rng';
@@ -134,6 +136,11 @@ export interface Tier1ActionInput {
   forceRoll?: number;
   /** Review 5 (test hooks, tech design §4.3): each row's roll in order (row n takes `forceRolls[n − 1]`). */
   forceRolls?: readonly number[];
+  /**
+   * Slice 8 (ADR 0052, 0088; T9): what is worn, the perks and the bar's buffs: the Party XP parts,
+   * the buff shares and *A shorter walk*. The item rows come in through `bonuses` (as the ticket's).
+   */
+  personal?: PersonalModifiers;
 }
 
 /** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
@@ -158,7 +165,13 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
   const m = i.modifiers ?? NO_MODIFIERS;
   const before = projectEnergy(i.energy, i.now, undefined, i.restedCap ?? restedCapFor(m));
   // Cost ordinances change the cost only (ADR 0021 §3): rewards stay on the content Energy.
-  const perRow = actionEnergy(i.action.energy, i.action.type, m);
+  // Slice 8 (T9): *A shorter walk* (canvass −1 a level), never below 1.
+  const perRow = actionEnergy(
+    i.action.energy,
+    i.action.type,
+    m,
+    i.personal ? perkCanvassEnergy(i.personal.perks, i.action.type) : 0,
+  );
   const cost = perRow * i.times;
   const rival = rivalGroundIn(m);
   if (rival && i.times > 1) {
@@ -189,7 +202,14 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
   const descriptor: ActionDescriptor =
     tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged;
   const fxpRateMultiplier = FXP_TYPE_MULTIPLIER[i.action.type] ?? 1;
-  const shares = rewardShares({ type: i.action.type, givesFxp: i.action.givesFxp, m });
+  const placeShares = rewardShares({ type: i.action.type, givesFxp: i.action.givesFxp, m });
+  // Slice 8 (T9, ADR 0052, 0088): the personal parts after the place's, each its own line.
+  const own = personalShares(i.personal, 'action', i.now);
+  const shares = {
+    fxp: [...placeShares.fxp, ...own.fxp],
+    xp: [...placeShares.xp, ...own.xp],
+    iron: [...placeShares.iron, ...own.iron],
+  };
   const ordinanceBonuses = [
     ...ordinanceCheckBonuses(i.action.type, m),
     ...placeCheckBonuses(i.action.type, m),

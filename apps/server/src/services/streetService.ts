@@ -74,6 +74,7 @@ import {
   arrestsOf,
   marksOf,
 } from './risk';
+import { personalOf, talkPctOf } from './personal';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { fadeDaysFor } from './lawBook';
@@ -131,7 +132,7 @@ export async function startRunInInTx(
   const spec = content.opponent(i.opponentId);
   if (!spec) throw new Error(`unknown opponent ${i.opponentId}`);
   const them = scaleOpponent(spec, { tier: i.tier, rivalGround: ctx.rival !== null });
-  const worn = wornStats(c, content);
+  const worn = wornStats(c, content, now);
   const tier = clothingTierOf(content, c);
   const max = healthMax(c.level);
   const you = {
@@ -142,7 +143,9 @@ export async function startRunInInTx(
     health: healthNow(healthTimerOf(c), now, c.level),
     healthMax: max,
   };
-  const chances = runInChances(you, them);
+  // Slice 8 (T9, design §3.6): *Talk your way out* reads the Papers slot (forged papers vs the police).
+  const talkPct = talkPctOf(personalOf(c, content), spec.side);
+  const chances = runInChances({ ...you, talkPct }, them);
   const encounterId = new Types.ObjectId();
   const decideBy = new Date(now + RUN_IN.decideMs);
   // Review 5 fix round (QA m5): a resolved run-in whose result is still open (a second tab, a tab

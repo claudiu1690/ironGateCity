@@ -2,7 +2,7 @@ import { copy } from '@irongate/content/copy';
 import type { GameContent } from '@irongate/content';
 import { Arrival, Character, City, PaperEntry, isDuplicateKeyError, nameWordsOf } from '@irongate/db';
 import type { ArrivalDoc, CharacterDoc, CityDoc } from '@irongate/db';
-import { NAME, buildNewCharacter, checkName, originFaction, resolveOrigin } from '@irongate/rules';
+import { NAME, buildNewCharacter, checkName, defaultOutfits, originFaction, resolveOrigin } from '@irongate/rules';
 import type { ArrivalView, CharacterView, FactionId, StoryScreenView } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
@@ -299,6 +299,9 @@ export async function joinArrival(content: GameContent, user: SessionUser, now: 
               today: w.set.today,
               orders: w.set.orders,
               iron: doc.iron + w.inc.iron,
+              // Slice 8 (T9, design §3.3): Town is what is worn, Plain clothes the kit's outfit and card.
+              outfits: defaultOutfits(doc.inventory, doc.equipment, content.kitOf(factionId)),
+              lastOutfit: 'town',
             },
           ],
           { session },

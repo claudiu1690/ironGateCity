@@ -1,4 +1,5 @@
 import type { NationRepublicView } from './nationTypes';
+import type { MissionGateReason } from './missions';
 import { LIFE_ACTS } from './lifeTypes';
 import type { LifeAct, LifeCondition } from './lifeTypes';
 /**
@@ -2894,7 +2895,8 @@ export interface MissionView {
    * (the next dusk; a Level or Rank lock wins, as the longer wait).
    */
   locked: {
-    reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD' | 'NIGHT';
+    /** Slice 8 (T9): a patron's introduction and a society call's door, beside slice 5's. */
+    reason: MissionGateReason | 'NIGHT';
     need: number;
     rankTitle?: string;
     opensAt?: number;

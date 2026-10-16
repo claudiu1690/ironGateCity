@@ -24,6 +24,7 @@ import { governorRouter } from './routers/governor';
 import { officeRouter } from './routers/office';
 import { petitionRouter } from './routers/petition';
 import { presidentRouter } from './routers/president';
+import { wardrobeRouter } from './routers/wardrobe';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -64,6 +65,8 @@ export const appRouter = router({
   petition: petitionRouter,
   // Slice 7 phase B, lane 1 (T13).
   governor: governorRouter,
+  // Slice 8 phase B, lane 1.
+  wardrobe: wardrobeRouter,
 });
 
 export type AppRouter = typeof appRouter;
