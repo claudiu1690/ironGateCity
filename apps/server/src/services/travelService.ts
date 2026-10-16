@@ -24,6 +24,7 @@ import {
   fillTemplate,
   JOURNEY_SET_ASIDE,
   journeyChoiceCheck,
+  PAPERS_CHECK,
   journeyLegs,
   journeyMinutes,
   legMinutes,
@@ -83,6 +84,8 @@ import type { LoadedCharacter } from './dayService';
 import { addInfluence, addPoints, writeLedger } from './ledger';
 import { dayModifiers, homeCapOf, restedCapToday } from './modifiers';
 import { landEntry } from './dossierService';
+import { advanceRequestsInTx } from './patronService';
+import { itemRows, personalOf } from './personal';
 import { politicsSummary } from './politicsService';
 import { keySeed } from './keyGuard';
 import { withRequestKey } from './requestKey';
@@ -624,6 +627,8 @@ export async function journeyView(
   // and the Heat a card moved (answered) or will move when slept through (unanswered).
   const hostile = ev?.deck === 'hostile';
   const difficulty = cardDifficulty(hostile ? 'hostile' : 'ordinary');
+  // Slice 8 (design §21.1 #8): the worn papers' `checkpoint` rows on the checkpoint card.
+  const papers = ev?.choices.some((x) => x.gate) ? itemRows(personalOf(c, content), { special: 'checkpoint' }) : [];
   const rivalTrip = !!j.rivalGround;
   const unanswered = !!ev && !j.choice && !opts.chosenless;
   let knockOns: NonNullable<JourneyView['arrival']>['knockOns'] | null = null;
@@ -676,19 +681,24 @@ export async function journeyView(
           title: ev.title,
           setup: fillCard(content, ev.setup, vars),
           ignore: fillCard(content, ev.ignore, vars),
-          choices: ev.choices.map((ch): JourneyChoiceView => ({
-            id: ch.id,
-            title: ch.title,
-            detail: fillCard(content, ch.detail, vars),
-            stat: ch.stats && ch.stats[0] !== 'best' ? { stats: ch.stats as CheckStats } : null,
-            chance: ch.stats
-              ? journeyChoiceCheck({ stats: ch.stats, values, standingBonus: bonus, difficulty }).chance
-              : null,
-            cost: ch.cost?.iron ?? null,
-            affordable: c.iron >= (ch.cost?.iron ?? 0),
-            // Design §23.2: the checkpoint's papers depend on Heat and the record (no odds word).
-            gated: !!ch.gate,
-          })).concat([
+          choices: ev.choices.map((ch): JourneyChoiceView => {
+            // Slice 8 (design §21.1 #8): forged papers make *Show your papers* a Charisma check.
+            const forged = !!ch.gate && papers.length > 0;
+            const stats = forged ? PAPERS_CHECK : ch.stats;
+            return {
+              id: ch.id,
+              title: ch.title,
+              detail: forged ? copy.life.recognition.showForged : fillCard(content, ch.detail, vars),
+              stat: stats && stats[0] !== 'best' ? { stats: stats as CheckStats } : null,
+              chance: stats
+                ? journeyChoiceCheck({ stats, values, standingBonus: bonus, difficulty, bonuses: papers }).chance
+                : null,
+              cost: ch.cost?.iron ?? null,
+              affordable: c.iron >= (ch.cost?.iron ?? 0),
+              // Design §23.2: the checkpoint's papers depend on Heat and the record (no odds word).
+              gated: !!ch.gate && !forged,
+            };
+          }).concat([
             // Review 5 #7 (answers §7): the explicit put-aside row, last; the only way out but a choice.
             {
               id: JOURNEY_SET_ASIDE,
@@ -937,10 +947,14 @@ export async function choose(deps: {
         ...(ch.partial ? { partial: { rewards: ch.partial.rewards } } : {}),
         ...(ch.gate ? { gate: ch.gate } : {}),
       };
+      // Slice 8 (design §21.1 #8): the worn papers' `checkpoint` rows on the checkpoint card (a card
+      // with a gated choice): *Show your papers* becomes a Charisma check, *Talk your way through* +10.
+      const papers = ev.choices.some((x) => x.gate) ? itemRows(personalOf(c, content), { special: 'checkpoint' }) : [];
       const r = resolveJourneyChoice({
         choice: spec,
         values,
         standingBonus: bonus,
+        bonuses: papers,
         rng: createRng(`${j.seed}:card`),
         difficulty: cardDifficulty(hostile ? 'hostile' : 'ordinary'),
         ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today, fadeDaysFor(c.factionId)).length) } : {}),
@@ -1082,20 +1096,22 @@ export async function choose(deps: {
       // Slice 8 (T11, design §4.2): *Feed him a story* lands an entry on a name of the destination
       // on the card's Success.
       const cardEntry = (rw as { dossier?: { category: DossierCategory; city: 'destination' } }).dossier;
-      const dossierKnock =
+      const landedCard =
         cardEntry && r.outcome === 'success'
-          ? (
-              await landEntry(session, content, updated, {
-                source: 'informer',
-                category: cardEntry.category,
-                cityId: j.to,
-                chancePct: 100,
-                seed: j.seed,
-                row: 'card',
-                now,
-              })
-            ).knock
+          ? await landEntry(session, content, updated, {
+              source: 'informer',
+              category: cardEntry.category,
+              cityId: j.to,
+              chancePct: 100,
+              seed: j.seed,
+              row: 'card',
+              now,
+            })
           : null;
+      const dossierKnock = landedCard?.knock ?? null;
+      // Slice 8 (T13): an entry counts toward a Request that asks for entries.
+      if (landedCard?.descriptor)
+        await advanceRequestsInTx(session, content, c._id, [{ a: landedCard.descriptor, outcome: 'success' }], now);
 
       const rewards: JourneyCardResult['rewards'] = [];
       if (rw.xp) rewards.push({ id: 'xp', amount: rw.xp });

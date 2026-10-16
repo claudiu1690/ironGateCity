@@ -3503,6 +3503,8 @@ export const copy = {
       /** The society call's tag (§21.1 Q9). */
       callTag: (patron: string) => `no Party XP · +2 Favour with ${patron}`,
       favourKnock: (patron: string, a: number, b: number) => `Favour with ${patron} ${a} → ${b}`,
+      /** Tech design §10.3: a Request advanced (*Crane's letter: 1 of 2*). */
+      letterKnock: (surname: string, a: number, b: number) => `${surname}'s letter: ${a} of ${b}`,
     },
     // ----- Where you sleep (screens §9) ------------------------------------------------------------
     home: {

@@ -48,6 +48,7 @@ import { keySeed } from './keyGuard';
 import { streetHooks } from './streetHooks';
 import { toThousandths, writeLedger, addInfluence } from './ledger';
 import { entryLine } from './dossierService';
+import { advanceRequestsInTx } from './patronService';
 import { addLegacyInTx, legacyKnock } from './legacyService';
 import { liveIssuesOf, restedCapToday } from './modifiers';
 import { moveOpinion, placeWrites, readPlace } from './place';
@@ -443,6 +444,10 @@ export async function attemptExpose(deps: Deps<{ wayId: WayId; idempotencyKey: s
         if (added.length > 0) legacy = legacyKnock(content, added[0]!, (updated0.legacy?.total ?? 0) + added[0]!.points);
       }
       const updated = legacy ? ((await Character.findById(c._id).session(session).lean<CharacterDoc>()) ?? updated0) : updated0;
+      const lines0: string[] = [];
+      // Slice 8 (T13, §21.1 Q26): *Something I can print* counts a Success or a Partial.
+      const requests = await advanceRequestsInTx(session, content, c._id, [{ a: descriptor, outcome }], now);
+      if (requests.length > 0) lines0.push(...requests.map((r) => r.line));
 
       const subject = content.name(file.subjectId)?.name ?? file.subjectId;
       const fileLines = (file.lines ?? []).map((l) => entryLine(content, { ...l, subjectId: file.subjectId, cityId: file.cityId }));
@@ -462,6 +467,7 @@ export async function attemptExpose(deps: Deps<{ wayId: WayId; idempotencyKey: s
       if (legacy) lines.push(legacy.line);
       lines.push(printed ? copy.life.expose.fileSpent : copy.life.expose.fileKept);
       if (outcome === 'success') lines.push(copy.life.expose.inTomorrows(subject));
+      lines.push(...lines0);
       const exposeOut: ExposeOutcome = {
         stamp,
         outcome,
@@ -538,6 +544,7 @@ export async function attemptExpose(deps: Deps<{ wayId: WayId; idempotencyKey: s
           hooks: [],
           issues: issueEffects,
           expose: exposeOut,
+          ...(requests.length > 0 ? { requests } : {}),
         },
         today: { ...tally, expose: true } as ActionResult['today'],
         again: null,

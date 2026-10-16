@@ -28,6 +28,7 @@ import type {
   LifeDesk,
   LifeLetter,
   Milestones,
+  PatronId,
   PatronTier,
   StoredPatronState,
 } from '@irongate/rules';
@@ -35,6 +36,7 @@ import type { ClientSession } from 'mongoose';
 import { landSettled } from './dossierService';
 import type { SettledLanding } from './dossierService';
 import { addLegacyInTx, legacyWords } from './legacyService';
+import { advancePatrons, crossInTx } from './patronService';
 import { weekdayName } from './lifeResult';
 import { liveIssuesOf } from './modifiers';
 import { residenceCityId, residenceOf } from './residence';
@@ -218,6 +220,15 @@ export async function settleLifeInTx(
     }),
   );
   const added = await addLegacyInTx(session, c._id, legacyRows);
+  // T13 (lane 1): a crossing's piece (Protégé: the pen, the case) through `crossInTx`, after the
+  // window's Legacy so its `protege:{patronId}` row is the one above (unique: nothing doubles); and
+  // the entries the gossip and the informants landed count toward a Request that asks for entries.
+  for (const x of crossings) await crossInTx(session, content, c._id, x.patronId as PatronId, [x.tier], today);
+  const entryActs = landings.flatMap((l) => (l.landed && l.descriptor ? [{ a: l.descriptor, outcome: 'success' as const }] : []));
+  if (entryActs.length > 0) {
+    const r = advancePatrons(content, c, (set.patrons as StoredPatron[] | undefined) ?? patrons, entryActs, now);
+    if (r.changed) set.patrons = r.patrons;
+  }
 
   // (7) Milestones: completed terms by office, the first deputy term's day.
   const completedTerms = read.terms.filter(
@@ -399,8 +410,8 @@ async function lifeEdition(
       if (q.doneAt || q.untilDay < today || q.arrivedDay > today) continue;
       const spec = content.request(q.id)?.request;
       if (!spec) continue;
-      const district = q.params.districtId ? (content.district(q.params.districtId)?.quarter.name ?? '') : '';
-      const issue = q.params.issueId ? (content.issue(q.params.issueId)?.name ?? '') : '';
+      const district = q.params?.districtId ? (content.district(q.params.districtId)?.quarter.name ?? '') : '';
+      const issue = q.params?.issueId ? (content.issue(q.params.issueId)?.name ?? '') : '';
       const fill = (s: string) =>
         s.replace('{district}', district).replace('{until}', weekdayName(q.untilDay)).replace('{issue}', issue);
       letters.push({

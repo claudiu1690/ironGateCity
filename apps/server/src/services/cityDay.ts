@@ -336,7 +336,7 @@ async function processBoundary(
     }
     if (!e || e.status !== 'polling') throw new AlreadySettled();
     const votes = (await tallyRules([e._id], session))[e._id] ?? {};
-    const r = countSeats(await countLines(e, cityId, session));
+    const r = countSeats(await countLines(e, cityId, session, { home: true }));
     const turnout = await turnoutOf(e._id, activeMembersFilter(cityId, home, d), votes, session);
     // Slice 4 (§7.5): the City Hero of the election just counted, and its scoreboard table.
     const scoreboards = await heroesStep({

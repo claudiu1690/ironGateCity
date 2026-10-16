@@ -1,6 +1,7 @@
 import { ticketsAt } from './eventViews';
 import { factionHereCount } from './presenceService';
 import { isCheckedAction } from '@irongate/content';
+import { copy } from '@irongate/content/copy';
 import type { GameContent } from '@irongate/content';
 import { Award, City, Contribution, District, IssueModel, OfficeTerm, contributionId } from '@irongate/db';
 import type {
@@ -12,6 +13,8 @@ import type {
   OfficeTermDoc,
 } from '@irongate/db';
 import {
+  SOCIETY,
+  societyDoor,
   FACTION_IDS,
   MORALE,
   OPINION_FLOORS,
@@ -52,6 +55,8 @@ import {
   weekOf,
 } from '@irongate/rules';
 import type {
+  SocietyTicketView,
+  SubjectPickView,
   ActionDescriptor,
   ActionView,
   CharacterViewV5,
@@ -258,6 +263,41 @@ export function missionView(
         : null,
     ...(mission.window ? { window: mission.window } : {}),
     art: { rung: 'scene', asset: assetView(content, mission.card ?? content.missionCard(mission.type)) },
+    ...(mission.society ? { society: societyTicket(content, c, ctx) } : {}),
+    ...(mission.dossier?.subject === 'choose' ? { subject: subjectPick(content, ctx) } : {}),
+  };
+}
+
+/** Slice 8 (T13, screens §14): a society call's door, figure and Favour with the town's patron. */
+function societyTicket(content: GameContent, c: CharacterDoc, ctx: MissionCtx): SocietyTicketView {
+  const needs = ctx.mission.society!.needs;
+  const door = societyDoor(needs);
+  const patron = content.patronOf(ctx.city.id) ?? null;
+  const favour = ctx.mission.society!.favour ?? SOCIETY.favour.success;
+  return {
+    needs,
+    door,
+    needsLine: copy.life.society.needs(needs, door),
+    patron: patron?.name ?? null,
+    favour,
+    tag: patron ? copy.life.patron.callTag(patron.name).replace('+2', `+${favour}`) : null,
+    calledToday: c.today.day === ctx.today && (c.today.calls ?? []).includes(ctx.location.id),
+  };
+}
+
+/** Slice 8 (T13, §21.1 Q12): the morgue file's name picker (the capital's drawn names). */
+function subjectPick(content: GameContent, ctx: MissionCtx): SubjectPickView {
+  return {
+    prompt: copy.life.society.pickName,
+    names: content
+      .namesOf(ctx.city.id)
+      .filter((n) => n.drawn)
+      .map((n) => ({
+        subjectId: n.id,
+        name: n.name,
+        factionId: n.factionId,
+        district: n.districtId ? (content.district(n.districtId)?.quarter.name ?? null) : null,
+      })),
   };
 }
 

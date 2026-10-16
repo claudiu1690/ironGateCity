@@ -759,6 +759,8 @@ export interface SettledLanding {
   daysLeft: number;
   patronId?: string;
   landed: boolean;
+  /** T13: for the patrons' Requests (an entry counts from any source). */
+  descriptor?: ActionDescriptor | null;
 }
 
 /** Exported for the settlement: an informant's or a gossip's entry, dated at its boundary. */
@@ -794,6 +796,7 @@ export async function landSettled(
     daysLeft: i.daysLeft,
     ...(i.patronId ? { patronId: i.patronId } : {}),
     landed: r.landed,
+    descriptor: r.descriptor,
   };
 }
 

@@ -694,7 +694,14 @@ async function runAction(
     case 'minderLapse':
     case 'wellFed5':
     case 'spirits9':
-    case 'roundsUsed': {
+    case 'roundsUsed':
+    case 'crane29':
+    case 'crane59':
+    case 'crane89':
+    case 'marr29':
+    case 'marr59':
+    case 'marr89':
+    case 'patronVisited': {
       const { me } = needCharacter();
       const { doc } = await loadCharacter(me, content, clock.now());
       did = await lifeAction(content, doc, action, clock.now());

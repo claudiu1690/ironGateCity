@@ -57,6 +57,8 @@ import type { HeldAction } from './streetService';
 import { nightAt } from './night';
 import { itemRows, personalOf, recognitionOf } from './personal';
 import { landEntry } from './dossierService';
+import { advanceRequestsInTx } from './patronService';
+import type { RequestAct } from './patronService';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { closeArrivalInTx } from './travelService';
@@ -670,6 +672,7 @@ export async function writeTier1(i: {
   // Slice 8 (T11, design §4.2): each Success of a tier-1 intelligence tap may land a Dossier entry,
   // one roll per row on its own stream (10 % + the worn press pass, camera or pen).
   // The cells' and the ward's taps (`held.cells`, `held.ward`) land on their own 25 % and category.
+  const entryActs: RequestAct[] = [];
   const heldTap = action.id === 'held.cells' || action.id === 'held.ward';
   const heldSpec = heldTap ? (action as { dossier?: { chance: number; category: DossierCategory } }).dossier : undefined;
   if (action.type === 'intelligence' && (!heldTap || heldSpec)) {
@@ -687,8 +690,20 @@ export async function writeTier1(i: {
         now,
       });
       if (landed.knock) knocks.push(landed.knock);
+      if (landed.descriptor) entryActs.push({ a: landed.descriptor, outcome: 'success' });
     }
     if (knocks.length > 0) built.effects.dossier = knocks;
+  }
+  // Slice 8 (T13, tech design §3.7): each row of the tap counts toward a matching Request (a tier-1
+  // row never fails), and each entry it landed toward one that asks for entries.
+  if (!i.frozenOrders) {
+    const a = {
+      ...placeDescriptor(content, 'checked', action, located.location, city),
+      ...((res.issues ?? []).length > 0 ? { issueIds: (res.issues ?? []).map((t) => t.issueId) } : {}),
+    };
+    const acts: RequestAct[] = [...res.attempts.map((row) => ({ a, outcome: row.outcome })), ...entryActs];
+    const requests = await advanceRequestsInTx(session, content, c._id, acts, now);
+    if (requests.length > 0) built.effects.requests = requests;
   }
   await ActionLog.create(
     [

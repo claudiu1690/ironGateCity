@@ -14,10 +14,19 @@ import { loadCharacter } from './dayService';
  * commits (its own guard is the version, which the touch leaves alone).
  */
 
-/** The read path's step 8: `seenAt = now` when older than a minute (no version bump). */
-export async function touchPresence(c: CharacterDoc, now: number): Promise<CharacterDoc> {
+/**
+ * The read path's step 8: `seenAt = now` when older than a minute (no version bump). Slice 8 (tech
+ * design §7.1, ADR 0052): with it `presence.recognised`, recognition above 0 on rival ground now (a
+ * change of it writes at once, so taking the coat off hides the visitor again on the next read).
+ */
+export async function touchPresence(c: CharacterDoc, now: number, recognised = false): Promise<CharacterDoc> {
   const seen = c.presence?.seenAt ? new Date(c.presence.seenAt).getTime() : null;
-  if (seen !== null && now - seen < PRESENCE.touchEveryMs) return c;
+  const was = c.presence?.recognised === true;
+  if (seen !== null && now - seen < PRESENCE.touchEveryMs && was === recognised) return c;
+  if (seen !== null && now - seen < PRESENCE.touchEveryMs) {
+    await Character.updateOne({ _id: c._id }, { $set: { 'presence.recognised': recognised } });
+    return { ...c, presence: { locationId: c.presence?.locationId ?? null, seenAt: c.presence?.seenAt ?? null, recognised } };
+  }
   const at = new Date(now);
   await Character.updateOne(
     {
@@ -28,9 +37,9 @@ export async function touchPresence(c: CharacterDoc, now: number): Promise<Chara
         { 'presence.seenAt': { $lt: new Date(now - PRESENCE.touchEveryMs) } },
       ],
     },
-    { $set: { 'presence.seenAt': at } },
+    { $set: { 'presence.seenAt': at, 'presence.recognised': recognised } },
   );
-  return { ...c, presence: { locationId: c.presence?.locationId ?? null, seenAt: at } };
+  return { ...c, presence: { locationId: c.presence?.locationId ?? null, seenAt: at, recognised } };
 }
 
 /** The home faction of the city a location (or city) is in; null in the capital. */
@@ -54,14 +63,16 @@ export async function hereNowAt(
   const place = homeOfLocation(content, locationId);
   const rows = await Character.find(
     { 'presence.locationId': locationId, 'presence.seenAt': { $gte: new Date(now - PRESENCE.hereNowMs) } },
-    { _id: 1, name: 1, factionId: 1 },
+    { _id: 1, name: 1, factionId: 1, 'presence.recognised': 1 },
   )
     .limit(200)
     .lean();
   const mine: Array<{ id: string; name: string }> = [];
   let others = 0;
   for (const r of rows) {
-    if (!visibleTo(viewer.factionId, r.factionId, place?.home ?? null)) continue;
+    // Slice 8 (ADR 0052): a recognised visitor on rival ground is counted by the home faction.
+    const recognised = r.presence?.recognised === true && place?.home === viewer.factionId;
+    if (!recognised && !visibleTo(viewer.factionId, r.factionId, place?.home ?? null)) continue;
     if (r.factionId === viewer.factionId) mine.push({ id: r._id.toHexString(), name: r.name });
     else others += 1;
   }

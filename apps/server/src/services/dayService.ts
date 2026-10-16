@@ -637,7 +637,12 @@ export async function loadCharacter(
   // Slice 4 (ADR 0025 §4): a due journey arrives (lazily) once the day is settled.
   const arrived = await ensureArrived(content, credited, now);
   // Slice 6 step 8 (ADR 0040): presence, at most once a minute, no version bump.
-  const doc = await touchPresence(arrived, now);
+  // Slice 8 (tech design §7.1): `presence.recognised` with it (recognition above 0 on rival ground).
+  const doc = await touchPresence(
+    arrived,
+    now,
+    isRivalGround(content, arrived, arrived.cityId) && recognitionOf(arrived, wornStats(arrived, content, now).cha, now).total > 0,
+  );
   // The city the character is in (an arrival may have moved them since `ensurePlaces`).
   const rival = isRivalGround(content, doc, doc.cityId);
   const here = !rival

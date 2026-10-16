@@ -11,6 +11,8 @@ export const missionRouter = router({
         missionId: z.string().min(1),
         wayId: z.string().min(1),
         idempotencyKey: z.uuid(),
+        // Slice 8 (T13, §21.1 Q12): the morgue file's chosen name.
+        subjectId: z.string().min(1).max(60).optional(),
       }),
     )
     .mutation(({ ctx, input }) => startMission({ user: ctx.user, content: ctx.content, now: ctx.now, input })),

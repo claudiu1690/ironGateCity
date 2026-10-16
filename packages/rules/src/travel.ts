@@ -194,14 +194,23 @@ export function journeyChoiceCheck(i: {
   standingBonus: CheckBonus | null;
   /** Slice 5: 14 on the hostile deck; default 10. */
   difficulty?: 10 | 14;
+  /** Slice 8 (design §21.1 #8): the worn papers' `checkpoint` rows on the checkpoint card. */
+  bonuses?: readonly CheckBonus[];
 }): CheckBreakdown {
   return computeCheck({
     stats: i.stats,
     values: i.values,
     difficulty: i.difficulty ?? TIER1_DIFFICULTY.battleground,
-    bonuses: i.standingBonus ? [i.standingBonus] : [],
+    bonuses: [...(i.standingBonus ? [i.standingBonus] : []), ...(i.bonuses ?? [])],
   });
 }
+
+/**
+ * Slice 8 (design §21.1 #8): with forged papers in the Papers slot (a `checkpoint` row), *Show your
+ * papers* is a Charisma check at the card's difficulty with the papers' +10 in place of the Cool and
+ * Clean gate; its Partial is the gate's (*They write your name down*), the papers kept.
+ */
+export const PAPERS_CHECK: CheckStatSpec = ['cha'];
 
 /**
  * Design §3: a checked choice is §8.4 at difficulty 10 with the Standing bonus of the destination,
@@ -217,8 +226,23 @@ export function resolveJourneyChoice(i: {
   difficulty?: 10 | 14;
   /** Slice 5: whether a gated choice's gate holds (the checkpoint: Cool and Clean). */
   gateHolds?: boolean;
+  /** Slice 8 (design §21.1 #8): the worn `checkpoint` rows (forged papers); on a gate, a Charisma check. */
+  bonuses?: readonly CheckBonus[];
 }): JourneyChoiceResolution {
   const cost = i.choice.cost?.iron ?? 0;
+  if (!i.choice.stats && i.choice.gate && (i.bonuses ?? []).length > 0) {
+    const check = journeyChoiceCheck({
+      stats: PAPERS_CHECK,
+      values: i.values,
+      standingBonus: i.standingBonus,
+      bonuses: i.bonuses ?? [],
+      ...(i.difficulty ? { difficulty: i.difficulty } : {}),
+    });
+    const roll = i.rng.roll100();
+    const pass = outcomeForRoll(roll, check.chance, 1) === 'success';
+    const rewards = pass ? i.choice.success.rewards : (i.choice.partial?.rewards ?? {});
+    return { outcome: pass ? 'success' : 'partial', check, roll, rewards: { ...rewards }, cost, branch: pass ? 'pass' : 'stopped' };
+  }
   if (!i.choice.stats) {
     if (i.choice.gate) {
       const pass = i.gateHolds === true;
@@ -232,6 +256,7 @@ export function resolveJourneyChoice(i: {
     values: i.values,
     standingBonus: i.standingBonus,
     ...(i.difficulty ? { difficulty: i.difficulty } : {}),
+    ...(i.bonuses ? { bonuses: i.bonuses } : {}),
   });
   const roll = i.rng.roll100();
   const outcome = outcomeForRoll(roll, check.chance, 1) === 'success' ? 'success' : 'partial';

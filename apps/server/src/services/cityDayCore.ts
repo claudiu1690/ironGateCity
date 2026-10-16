@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Candidacy, Character, Vote } from '@irongate/db';
 import type { BallotLine, ElectionDoc } from '@irongate/db';
-import { COUNCIL, backersOf, dayStart, wardVote } from '@irongate/rules';
+import { COUNCIL, NO_PERKS, backersOf, dayStart, endorsementBonus, perkHomeVotes, protege, wardVote } from '@irongate/rules';
 import type { CountLine, DayKey, FactionId } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 
@@ -105,10 +105,15 @@ export async function countLines(
   e: Pick<ElectionDoc, '_id' | 'ballot' | 'npcSlate'>,
   cityId: string,
   session: ClientSession,
-): Promise<Array<CountLine & { factionId?: FactionId }>> {
+  /**
+   * Slice 8 (T13; design §5.4, §7.2): a home-council count adds the Protégé's +2 and *A name they
+   * know* to a player's total (`CountLine.bonus`); a battleground count reads `protege` instead.
+   */
+  opts: { home?: boolean } = {},
+): Promise<Array<CountLine & { factionId?: FactionId; protege?: boolean }>> {
   const ballot = e.ballot ?? [];
   const playerIds = ballot.flatMap((b) => (b.characterId ? [b.characterId] : []));
-  const chars = await Character.find({ _id: { $in: playerIds } }, { localStanding: 1, name: 1 })
+  const chars = await Character.find({ _id: { $in: playerIds } }, { localStanding: 1, name: 1, patrons: 1, legacy: 1 })
     .session(session)
     .lean();
   const cands = await Candidacy.find(
@@ -132,6 +137,8 @@ export async function countLines(
         backers: cand ? backersOf({ members: cand.endorsements.length, branch: cand.branch !== null }) : 0,
         order: b.order,
         ...faction,
+        ...(opts.home && c ? homeBonus(c) : {}),
+        ...(c && protege(c.patrons ?? []) ? { protege: true } : {}),
       };
     }
     const npc = e.npcSlate.find((s) => s.npcId === b.npcId);
@@ -148,3 +155,20 @@ export async function countLines(
     };
   });
 }
+
+/** Slice 8 (T13): the Protégé's +2 and *A name they know*'s +1 a level on a home-council total. */
+function homeBonus(c: { patrons?: ReadonlyArray<{ favour: number }>; legacy?: { perks?: Record<string, number> } | null }): { bonus?: number } {
+  const n = endorsementBonus(c.patrons ?? []).homeTotal + perkHomeVotes({ ...NO_PERKS, ...(c.legacy?.perks ?? {}) });
+  return n > 0 ? { bonus: n } : {};
+}
+
+/**
+ * Slice 8 (T13; design §5.4, §21.1 Q38): a battleground count's +1 point of score for a party with at
+ * least one Protégé among its candidates in that count (once, never one per Protégé).
+ */
+export function protegeScoreBonus(lines: ReadonlyArray<{ factionId?: FactionId; protege?: boolean }>): Partial<Record<FactionId, number>> {
+  const out: Partial<Record<FactionId, number>> = {};
+  for (const l of lines) if (l.protege && l.factionId) out[l.factionId] = PATRON_SCORE;
+  return out;
+}
+const PATRON_SCORE = endorsementBonus([{ favour: 100 }]).battlegroundScore;

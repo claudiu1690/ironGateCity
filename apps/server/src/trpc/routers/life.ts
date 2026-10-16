@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { dinner, meal, round } from '../../services/barService';
 import { hire, renew } from '../../services/bodyguardService';
+import { favourPatron, getPatron, giftPatron, visitPatron } from '../../services/patronService';
 import { lifeMe, placeCards } from '../../services/placeCards';
 import { bribe, buy, sell } from '../../services/shopService';
 import { protectedProcedure, router } from '../trpc';
@@ -51,4 +52,21 @@ export const lifeRouter = router({
     .input(z.object({ locationId: Place }))
     .query(({ ctx, input }) => placeCards({ user: ctx.user, content: ctx.content, now: ctx.now }, input.locationId)),
   me: protectedProcedure.query(({ ctx }) => lifeMe({ user: ctx.user, content: ctx.content, now: ctx.now })),
+});
+
+/** Slice 8 phase B, lane 1 (T13; tech design §8.1): patrons. The gift and the favour carry a key. */
+const PatronId = z.enum(['crane', 'marr']);
+export const patronRouter = router({
+  get: protectedProcedure
+    .input(z.object({ patronId: PatronId }))
+    .query(({ ctx, input }) => getPatron({ user: ctx.user, content: ctx.content, now: ctx.now }, input.patronId)),
+  visit: protectedProcedure
+    .input(z.object({ patronId: PatronId }))
+    .mutation(({ ctx, input }) => visitPatron({ user: ctx.user, content: ctx.content, now: ctx.now }, input.patronId)),
+  gift: protectedProcedure
+    .input(z.object({ patronId: PatronId, idempotencyKey: Key }))
+    .mutation(({ ctx, input }) => giftPatron({ user: ctx.user, content: ctx.content, now: ctx.now }, input)),
+  favour: protectedProcedure
+    .input(z.object({ patronId: PatronId, issueDocId: z.string().min(1).optional(), idempotencyKey: Key }))
+    .mutation(({ ctx, input }) => favourPatron({ user: ctx.user, content: ctx.content, now: ctx.now }, input)),
 });

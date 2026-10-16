@@ -1,6 +1,6 @@
 import type { NationRepublicView } from './nationTypes';
 import type { MissionGateReason } from './missions';
-import type { MinderView } from './wardrobeViews';
+import type { FavourKnock, MinderView, PatronCardView, RequestKnock, SocietyTicketView, SubjectPickView } from './wardrobeViews';
 import { LIFE_ACTS } from './lifeTypes';
 import type { LifeAct, LifeCondition } from './lifeTypes';
 import type { DossierKnock, DossierView, ExposeOutcome, HomeView, LegacyKnock, LegacyView, LifeDesk, LifeLetter } from './lifeViews';
@@ -1299,6 +1299,10 @@ export interface ActionResult {
     dossier?: DossierKnock[];
     /** Slice 8 (tech design §10.2): the exposé's own lines (the story modal). */
     expose?: ExposeOutcome | null;
+    /** Slice 8 (T13, tech design §10.3): a society call's Favour with the town's patron. */
+    favour?: FavourKnock | null;
+    /** Slice 8 (T13): the patrons' Requests this act advanced. */
+    requests?: RequestKnock[];
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -2391,6 +2395,9 @@ export interface PoliticalResult {
     dossier?: { line: string; used: number; cap: number } | null;
     legacy?: LegacyKnock | null;
     life?: string[];
+    /** Slice 8 (T13, tech design §10.1): a gift's Favour; the Requests a favour's act advanced. */
+    favour?: FavourKnock | null;
+    requests?: RequestKnock[];
   };
   performedAt: string;
   idempotencyKey: string;
@@ -2426,7 +2433,9 @@ export interface PoliticalResult {
     // Slice 8 phase B, lane 2 (tech design §10.1): the Dossier, the home, Legacy.
     | { kind: 'dossier'; dossier: DossierView }
     | { kind: 'home'; home: HomeView }
-    | { kind: 'legacy'; legacy: LegacyView };
+    | { kind: 'legacy'; legacy: LegacyView }
+    // Slice 8 phase B, lane 1 (T13): after a gift or a favour, the patron's card.
+    | { kind: 'patron'; patron: PatronCardView };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2934,6 +2943,10 @@ export interface MissionView {
   /** Review 5: a night mission (its own window). */
   window?: 'night';
   art: ResultArt;
+  /** Slice 8 (T13, screens §14): a society call's door, figure and Favour (absent on other types). */
+  society?: SocietyTicketView | null;
+  /** Slice 8 (T13, §21.1 Q12): the morgue file's name picker (`mission.start`'s `subjectId`). */
+  subject?: SubjectPickView | null;
 }
 
 /** The run-in modal's state (ADR 0032): one choice. The client prints odds words, never numbers. */

@@ -46,6 +46,7 @@ import {
   cityDayHooks,
   cityResidentsFilter,
   countLines,
+  protegeScoreBonus,
   newSeed,
   turnoutOf,
 } from './cityDayCore';
@@ -371,6 +372,8 @@ export async function processBattlegroundBoundary(
       rng: createRng(`${e.seed}:draw`),
       seats: P.seats,
       fullTurnout: P.fullTurnout,
+      // Slice 8 (T13): a party with a Protégé standing scores +1.
+      scoreBonus: protegeScoreBonus(lines),
     });
     const t = await turnoutOf(e._id, cityResidentsFilter(cityId, d), votes, session);
     const scoreboard: ScoreboardTableView[] = scoreboards.get(cityId) ?? [];

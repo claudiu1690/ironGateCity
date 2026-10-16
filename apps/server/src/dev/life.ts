@@ -1,8 +1,8 @@
 import type { GameContent } from '@irongate/content';
 import { Character, DossierEntry } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { DOSSIER_CATEGORIES, FACTION_IDS, createRng, dayKey, flatCounts, flatState, grantItem, hire, minderPower, toSpend } from '@irongate/rules';
-import type { DossierCategory } from '@irongate/rules';
+import { DOSSIER_CATEGORIES, FACTION_IDS, PATRON, PATRON_TIERS, createRng, dayKey, flatCounts, flatState, grantItem, hire, minderPower, tierOf, toSpend } from '@irongate/rules';
+import type { DossierCategory, PatronId, PatronTier } from '@irongate/rules';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
@@ -12,6 +12,7 @@ import type { Auth } from '../auth';
 import { bindInTx, capacityOf, dossierHooks, landEntry, slotsUsed, turnInTx } from '../services/dossierService';
 import { testHome } from '../services/homeService';
 import { testLegacy } from '../services/legacyService';
+import { crossInTx, patronStateOf } from '../services/patronService';
 import { residenceCityId } from '../services/residence';
 import { recognitionOf } from '../services/personal';
 import { streetHooks } from '../services/streetHooks';
@@ -66,6 +67,78 @@ export const ForceBody = z.strictObject({
   runIn: z.string().min(1).optional(),
   minder: z.enum(['works', 'fails']).optional(),
 });
+
+// Lane 1's T13 hook (tech design §8.6): a patron's Favour (or a tier), the first visit, a Request.
+export const PatronBody = z.strictObject({
+  patronId: z.enum(['crane', 'marr']),
+  /** Favour set to this figure (0–100); crossings upward go through `crossInTx` (the piece, Legacy). */
+  favour: z.number().int().min(0).max(100).optional(),
+  /** Favour set to the tier's threshold (Acquaintance 10 … Protégé 90). */
+  tier: z.enum(PATRON_TIERS).optional(),
+  /** `firstVisitDay = today − n` (0: today; 2: the first letter arrives at the next boundary). */
+  visitDaysAgo: z.number().int().min(0).max(60).optional(),
+  /** A Request open now (arrived today, `daysLeft` more days, default 3), or `'clear'` for none. */
+  request: z
+    .union([
+      z.strictObject({
+        id: z.string().min(1),
+        progress: z.number().int().min(0).max(5).optional(),
+        daysLeft: z.number().int().min(0).max(3).optional(),
+        districtId: z.string().min(1).optional(),
+      }),
+      z.literal('clear'),
+    ])
+    .optional(),
+  /** The weekly favour called `n` days ago (null: ready). */
+  favourDaysAgo: z.number().int().min(0).max(7).nullable().optional(),
+});
+
+/** `/api/test/patron`: writes the embedded patron in one transaction (version bumped). */
+export async function testPatron(content: GameContent, c0: CharacterDoc, body: z.output<typeof PatronBody>, now: number) {
+  const spec = content.patron(body.patronId);
+  if (!spec) throw new DevRefusal(404, 'no such patron');
+  const today = dayKey(now);
+  return inTransaction(async (session) => {
+    const c = await Character.findById(c0._id).session(session).lean<CharacterDoc>();
+    if (!c) throw new DevRefusal(404, 'no character');
+    const p = { ...patronStateOf(c, body.patronId as PatronId) };
+    const before = p.favour;
+    if (body.tier) p.favour = PATRON.tiers.find(([t]) => t === body.tier)![1];
+    if (body.favour !== undefined) p.favour = body.favour;
+    if (body.visitDaysAgo !== undefined) p.firstVisitDay = today - body.visitDaysAgo;
+    if (body.favourDaysAgo !== undefined) p.favourDay = body.favourDaysAgo === null ? null : today - body.favourDaysAgo;
+    if (body.request === 'clear') p.requests = [];
+    else if (body.request) {
+      const want = body.request;
+      const r = spec.requests.find((x) => x.id === want.id);
+      if (!r) throw new DevRefusal(400, `not one of the patron's Requests: ${want.id}`);
+      const progress = Math.min(r.target, want.progress ?? 0);
+      const districtId = want.districtId ?? (r.match.districtId === 'rotate' ? content.districtsOf(content.nation.capitalId)[0]?.id : undefined);
+      p.requests = [
+        ...p.requests.filter((x) => x.id !== r.id),
+        {
+          id: r.id,
+          arrivedDay: today,
+          untilDay: today + (want.daysLeft ?? PATRON.request.openDays - 1),
+          target: r.target,
+          progress,
+          doneAt: progress >= r.target ? new Date(now) : null,
+          params: { ...(districtId ? { districtId } : {}) },
+        },
+      ].slice(-PATRON.request.held);
+    }
+    const list = [...(c.patrons ?? []).filter((x) => x.id !== p.id), p];
+    await Character.updateOne({ _id: c._id }, { $set: { patrons: list }, $inc: { version: 1 } }, { session });
+    const crossed = PATRON.tiers.filter(([, at]) => before < at && p.favour >= at).map(([t]) => t as PatronTier);
+    const x = await crossInTx(session, content, c._id, p.id, crossed, today);
+    return {
+      patron: { id: p.id, favour: p.favour, tier: tierOf(p.favour), firstVisitDay: p.firstVisitDay, favourDay: p.favourDay, requests: p.requests },
+      crossed,
+      piece: x.piece,
+      legacy: x.legacy,
+    };
+  });
+}
 
 const callerAs = (content: GameContent, c: CharacterDoc, now: () => number) =>
   createCaller({ user: { id: c.userId, name: c.name }, content, now } as never);
@@ -259,6 +332,17 @@ export async function lifeStatus(content: GameContent, c: CharacterDoc | null, n
       ? { cityId: flat.cityId, paidThroughDay: flat.paidThroughDay, state: flatState(flat, today), counts: flatCounts(flat, residenceCityId(c), today) }
       : null,
     legacy: { total: c.legacy?.total ?? 0, toSpend: toSpend(c.legacy ?? { total: 0, spent: 0 }) },
+    // Lane 1's T13: each patron's Favour, tier and open Requests.
+    patrons: content.patrons.map((spec) => {
+      const p = patronStateOf(c, spec.id);
+      return {
+        id: spec.id,
+        favour: p.favour,
+        tier: tierOf(p.favour),
+        firstVisitDay: p.firstVisitDay,
+        requests: p.requests.map((q) => ({ id: q.id, progress: q.progress, target: q.target, untilDay: q.untilDay, done: q.doneAt !== null })),
+      };
+    }),
   };
 }
 
@@ -304,6 +388,7 @@ export function registerLifeHooks(app: FastifyInstance, deps: { auth: Auth; cont
   app.post('/api/test/bodyguard', handle(BodyguardBody, async (body, c) => testBodyguard(content, c, body, now())));
   app.post('/api/test/buffs', handle(BuffsBody, async (body, c) => testBuffs(c, body, now())));
   app.post('/api/test/force', handle(ForceBody, async (body, c) => testForce(c, body)));
+  app.post('/api/test/patron', handle(PatronBody, async (body, c) => testPatron(content, c, body, now())));
   app.post(
     '/api/test/legacy',
     handle(LegacyBody, async (body, c) => {
@@ -335,7 +420,15 @@ export type LifeDevAction =
   | 'minderLapse'
   | 'wellFed5'
   | 'spirits9'
-  | 'roundsUsed';
+  | 'roundsUsed'
+  // Lane 1's T13 (tech design §8.7): Crane at 29 / 59 / 89, Marr at 29 / 59 / 89, first visit two days ago.
+  | 'crane29'
+  | 'crane59'
+  | 'crane89'
+  | 'marr29'
+  | 'marr59'
+  | 'marr89'
+  | 'patronVisited';
 export const LIFE_DEV_ACTIONS: readonly LifeDevAction[] = [
   'dossierThree',
   'dossierStale',
@@ -356,6 +449,13 @@ export const LIFE_DEV_ACTIONS: readonly LifeDevAction[] = [
   'wellFed5',
   'spirits9',
   'roundsUsed',
+  'crane29',
+  'crane59',
+  'crane89',
+  'marr29',
+  'marr59',
+  'marr89',
+  'patronVisited',
 ];
 
 export async function lifeAction(content: GameContent, c: CharacterDoc, action: LifeDevAction, now: number): Promise<string> {
@@ -424,5 +524,20 @@ export async function lifeAction(content: GameContent, c: CharacterDoc, action: 
     case 'legacy20':
       await testLegacy(c._id, 20, dayKey(now));
       return 'Legacy +20';
+    case 'crane29':
+    case 'crane59':
+    case 'crane89':
+    case 'marr29':
+    case 'marr59':
+    case 'marr89': {
+      const patronId = action.startsWith('crane') ? 'crane' : 'marr';
+      const favour = Number(action.slice(-2));
+      await testPatron(content, c, { patronId, favour }, now);
+      const next = favour === 29 ? 'Associate' : favour === 59 ? 'Confidant' : 'Protégé';
+      return `${content.patron(patronId)?.name ?? patronId} at ${favour}, one short of ${next}`;
+    }
+    case 'patronVisited':
+      for (const patronId of ['crane', 'marr'] as const) await testPatron(content, c, { patronId, visitDaysAgo: 2 }, now);
+      return 'First visit to both patrons two days ago: a letter at the next boundary';
   }
 }

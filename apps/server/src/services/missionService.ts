@@ -16,6 +16,9 @@ import {
   projectHeat,
   missionCategory,
   missionEntryChance,
+  categoryOfKind,
+  DOSSIER,
+  SOCIETY,
   resolveMission,
   standingView,
   windowLock,
@@ -30,6 +33,7 @@ import type {
   MissionFinal,
   MissionStart,
   OrdersState,
+  Outcome,
   RecordLevel,
   RunInOutcome,
   RunInPending,
@@ -44,6 +48,8 @@ import { ordersTargetOf } from './pushTarget';
 import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { landEntry } from './dossierService';
+import { addFavourInTx, advanceRequestsInTx } from './patronService';
+import type { RequestAct } from './patronService';
 import { createStayInTx, heldPlace } from './heldService';
 import { runKeyedAction } from './keyedAction';
 import { keySeed } from './keyGuard';
@@ -82,6 +88,8 @@ export interface StartInput {
   missionId: string;
   wayId: string;
   idempotencyKey: string;
+  /** Slice 8 (T13, §21.1 Q12): the morgue file's chosen name (a capital name). */
+  subjectId?: string | undefined;
 }
 
 /** The held start in an encounter: a mission's, with the test hooks' later rolls. */
@@ -90,6 +98,8 @@ export interface HeldMission {
   wayId: string;
   start: MissionStart;
   force: Pick<StreetForce, 'choiceRoll' | 'caught'> | null;
+  /** Slice 8 (T13): the morgue file's chosen name, kept through a run-in. */
+  subjectId?: string;
 }
 
 function locateMission(content: GameContent, input: Pick<StartInput, 'locationId' | 'missionId' | 'wayId'>) {
@@ -117,6 +127,11 @@ export function targetOf(
   );
 }
 
+/** Slice 8 (T13, §21.1 Q12): the names the morgue file may open (the capital's, by name). */
+export function subjectChoices(content: GameContent, located: LocatedMission) {
+  return located.mission.dossier?.subject === 'choose' ? content.namesOf(located.city.id).filter((n) => n.drawn) : [];
+}
+
 /** Tech design §7.2: the mission's refusals that depend on the character (before the key and in the transaction). */
 function missionRefusal(
   content: GameContent,
@@ -127,6 +142,8 @@ function missionRefusal(
   way: { id: string; window?: 'night' },
   /** Slice 8 (T9): the residence city, for Heat's cooling (a society call refuses Wanted). */
   residence: CityDoc | null = null,
+  /** Slice 8 (T13): the morgue file's chosen name. */
+  subjectId?: string,
 ): GameError | null {
   const blocked = notFree(c);
   if (blocked) return blocked;
@@ -169,6 +186,9 @@ function missionRefusal(
   });
   if (gate?.reason === 'RECORD') return new GameError('RECORD_BARRED', { locationId: located.location.id });
   if (gate) return new GameError('MISSION_LOCKED', { lock: gate.reason, need: gate.need });
+  // Slice 8 (T13, §21.1 Q12): the morgue file asks for a name of the capital's (the briefing's picker).
+  if (located.mission.dossier?.subject === 'choose' && !subjectChoices(content, located).some((n) => n.id === subjectId))
+    return new GameError('SUBJECT_REQUIRED', { missionId: located.mission.id }, 'BAD_REQUEST');
   // Review 5 (tech design §7.3, ADR 0080): a night window by day, refused before the key is stored
   // (and again in the transaction, at the act's time), so the same key plays at dusk.
   const night = windowLock({ mission: located.mission, way, night: nightAt(now) });
@@ -201,7 +221,7 @@ export async function startMission(deps: {
   const stored = () => storedStart(content, c0._id, input, deps.now());
   const prior = await stored();
   if (prior) return prior;
-  const refusal = missionRefusal(content, c0, located, undefined, deps.now(), way);
+  const refusal = missionRefusal(content, c0, located, undefined, deps.now(), way, null, input.subjectId);
   if (refusal) throw refusal.toTRPC();
   const force = streetHooks.take(c0._id.toHexString(), input.idempotencyKey);
 
@@ -222,7 +242,7 @@ export async function startMission(deps: {
       // Slice 5 (tech design §8.2): an arrived journey here is closed first (its ignore effects).
       c = await closeArrivalHere(content, session, c, now);
       const ctx = await readPlace(content, session, c, located, today);
-      const refused = missionRefusal(content, c, located, ctx.district, now, way, ctx.residenceCity);
+      const refused = missionRefusal(content, c, located, ctx.district, now, way, ctx.residenceCity, input.subjectId);
       if (refused) throw refused;
 
       // QA M1: one seed per key, so a re-run of this transaction draws the same rolls.
@@ -257,6 +277,7 @@ export async function startMission(deps: {
         wayId: way.id,
         start,
         force: force ? { ...(force.choiceRoll ? { choiceRoll: force.choiceRoll } : {}), ...(force.caught ? { caught: force.caught } : {}) } : null,
+        ...(input.subjectId && located.mission.dossier?.subject === 'choose' ? { subjectId: input.subjectId } : {}),
       };
       // Slice 8 (T31, §24.10 Q3–Q4): a mission that reaches its rewards spends one round in hand, at
       // the start (its receipt's line); T9: the first run-in while recognised (the paper's line).
@@ -466,6 +487,8 @@ export async function writeMissionFinal(i: {
     }),
     missions: ((c.today.day === today ? (c.today as { missions?: number }).missions : 0) ?? 0) + 1,
     ...(s.rivalGround ? { rivalCityId: city.id } : {}),
+    // Slice 8 (T13, design §3.7): a society call once a day per place, in the tally's own `$set`.
+    ...(mission.society ? { calls: [...(c.today.day === today ? (c.today.calls ?? []) : []), located.location.id] } : {}),
   };
 
   // The stay (design §7.2, §9.2), in this transaction.
@@ -597,12 +620,40 @@ export async function writeMissionFinal(i: {
   built.character.orders.target = await ordersTargetOf(content, updated, today, undefined, session);
   // Slice 8 (T11, design §4.2): surveillance lands an entry on a Success (one time in two on a
   // Partial), theft on a Success; on the mission's named figure, else a name of the target party.
-  const entryChance = final.dropped ? 0 : missionEntryChance(mission.type, final.outcome);
-  const subject = mission.dossier?.subject && mission.dossier.subject !== 'choose' ? mission.dossier.subject : undefined;
+  // T13 (design §3.7, §5.4): a society call one time in four on a Success (the late table: certain),
+  // a figure of the place's city; the morgue file on the name chosen at the briefing.
+  const outcome: Outcome = final.dropped ? 'failure' : final.outcome;
+  const social = mission.society;
+  const entryChance =
+    outcome === 'failure'
+      ? 0
+      : social
+        ? outcome === 'success'
+          ? social.entry === 'onSuccess'
+            ? 100
+            : DOSSIER.chance.society
+          : 0
+        : missionEntryChance(mission.type, outcome);
+  const subject =
+    mission.dossier?.subject === 'choose'
+      ? held.subjectId
+      : mission.dossier?.subject
+        ? mission.dossier.subject
+        : undefined;
+  const requestActs: RequestAct[] = [
+    {
+      a: {
+        ...placeDescriptor(content, 'mission', { id: mission.id, type: mission.type }, located.location, city),
+        ...(s.issues.length > 0 ? { issueIds: s.issues.map((t) => t.issueId) } : {}),
+        missionType: mission.type,
+      },
+      outcome,
+    },
+  ];
   if (entryChance > 0) {
     const landed = await landEntry(session, content, updated, {
-      source: mission.type === 'theft' ? 'theft' : 'surveillance',
-      category: missionCategory(mission.type, mission.dossier?.category),
+      source: social ? 'society' : mission.type === 'theft' ? 'theft' : 'surveillance',
+      category: social ? (mission.dossier?.category ?? categoryOfKind(located.location.kind)) : missionCategory(mission.type, mission.dossier?.category),
       cityId: city.id,
       ...(subject ? { subjectId: subject } : {}),
       ...(s.opinion.target ? { party: s.opinion.target } : {}),
@@ -612,7 +663,18 @@ export async function writeMissionFinal(i: {
       now: i.now,
     });
     if (landed.knock) built.effects.dossier = [landed.knock];
+    if (landed.descriptor) requestActs.push({ a: landed.descriptor, outcome: 'success' });
   }
+  // T13 (design §5.2): +2 Favour with the town's patron on a Success, +1 on a Partial (the late table +3).
+  const patron = social ? content.patronOf(city.id) : undefined;
+  if (social && patron && outcome !== 'failure') {
+    const gain = outcome === 'success' ? (social.favour ?? SOCIETY.favour.success) : SOCIETY.favour.partial;
+    const favour = await addFavourInTx(session, content, c._id, patron.id, gain, i.now);
+    if (favour) built.effects.favour = favour;
+  }
+  // T13 (tech design §3.7): the patrons' Requests this mission (and its entry) advanced.
+  const requests = await advanceRequestsInTx(session, content, c._id, requestActs, i.now);
+  if (requests.length > 0) built.effects.requests = requests;
   await ActionLog.create(
     [
       {

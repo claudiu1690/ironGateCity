@@ -1,11 +1,12 @@
 import type { GameContent } from '@irongate/content';
 import { dayKey } from '@irongate/rules';
-import type { BuffsView, MinderView, OutfitId, PlaceLifeCardsView } from '@irongate/rules';
+import type { BuffsView, MinderView, OutfitId, PatronClockView, PlaceLifeCardsView } from '@irongate/rules';
 import type { SessionUser } from '../trpc/context';
 import { barCard, buffsView, diningCard } from './barService';
 import { hireCard, minderView } from './bodyguardService';
 import { loadCharacter } from './dayService';
 import { gameError } from '../gameError';
+import { patronCardAt, patronClocks } from './patronService';
 import { shopCards } from './shopService';
 import { wardrobeView } from './wardrobeService';
 
@@ -26,6 +27,7 @@ export async function placeCards(deps: Deps, locationId: string): Promise<PlaceL
     hire: hireCard(deps.content, doc, locationId, today),
     bar: barCard(deps.content, doc, locationId, now, today),
     dining: diningCard(deps.content, doc, locationId, now, today),
+    patron: await patronCardAt(deps.content, doc, locationId, now),
   };
 }
 
@@ -34,11 +36,13 @@ export interface LifeMeView {
   outfit: OutfitId | null;
   minder: MinderView | null;
   buffs: BuffsView | null;
+  /** T13 (screens §8.2): the patrons' clocks. */
+  patrons: PatronClockView[];
 }
 
 export async function lifeMe(deps: Deps): Promise<LifeMeView> {
   const now = deps.now();
   const { doc } = await loadCharacter(deps.user, deps.content, now);
   const w = wardrobeView(deps.content, doc, now);
-  return { cha: w.cha, outfit: w.line.outfit, minder: minderView(deps.content, doc, dayKey(now)), buffs: buffsView(doc, now) };
+  return { cha: w.cha, outfit: w.line.outfit, minder: minderView(deps.content, doc, dayKey(now)), buffs: buffsView(doc, now), patrons: patronClocks(deps.content, doc) };
 }

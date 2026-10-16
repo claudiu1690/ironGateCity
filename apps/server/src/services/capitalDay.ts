@@ -50,6 +50,7 @@ import {
   AlreadySettled,
   cityDayHooks,
   countLines,
+  protegeScoreBonus,
   districtResidentsFilter,
   newSeed,
   turnoutOf,
@@ -428,6 +429,8 @@ export async function processCapitalBoundary(
         ballotsByFaction: cardBallots(cards, votes),
         opinion: shares.get(dist.id)!,
         rng: createRng(`${e.seed}:draw`),
+        // Slice 8 (T13): a party with a Protégé standing scores +1.
+        scoreBonus: protegeScoreBonus(lines),
       });
       const t = await turnoutOf(e._id, districtResidentsFilter(cityId, dist.id, d), votes, session);
       turnout.voters += t.voters;

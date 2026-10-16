@@ -106,7 +106,15 @@ export type DevAction =
   | 'minderLapse'
   | 'wellFed5'
   | 'spirits9'
-  | 'roundsUsed';
+  | 'roundsUsed'
+  // Lane 1's T13 (tech design §8.7): the patrons.
+  | 'crane29'
+  | 'crane59'
+  | 'crane89'
+  | 'marr29'
+  | 'marr59'
+  | 'marr89'
+  | 'patronVisited';
 
 /** Slice 8 phase B, lane 2 (tech design §8.7): the Dossier's used / cap and the last roll, the flat, Legacy. */
 export interface DevLifeStatus {
@@ -117,6 +125,14 @@ export interface DevLifeStatus {
   dossier: { used: number; cap: number; lastRoll: { chance: number; roll: number; landed: boolean; source: string; at: number } | null };
   flat: { cityId: string; paidThroughDay: number; state: 'paid' | 'due' | 'waiting'; counts: boolean } | null;
   legacy: { total: number; toSpend: number };
+  /** Lane 1's T13: each patron's Favour, tier and open Requests. */
+  patrons: Array<{
+    id: string;
+    favour: number;
+    tier: string | null;
+    firstVisitDay: number | null;
+    requests: Array<{ id: string; progress: number; target: number; untilDay: number; done: boolean }>;
+  }>;
 }
 
 /** Slice 7 (tech design §8.7): the status's nation block. */

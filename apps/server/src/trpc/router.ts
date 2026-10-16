@@ -26,7 +26,7 @@ import { petitionRouter } from './routers/petition';
 import { presidentRouter } from './routers/president';
 import { dossierRouter, exposeRouter, homeRouter, legacyRouter } from './routers/dossier';
 import { wardrobeRouter } from './routers/wardrobe';
-import { barRouter, bodyguardRouter, lifeRouter, shopRouter } from './routers/life';
+import { barRouter, bodyguardRouter, lifeRouter, patronRouter, shopRouter } from './routers/life';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -73,6 +73,8 @@ export const appRouter = router({
   bodyguard: bodyguardRouter,
   bar: barRouter,
   life: lifeRouter,
+  // T13.
+  patron: patronRouter,
   // Slice 8 phase B, lane 2 (T11, T12, T14).
   dossier: dossierRouter,
   expose: exposeRouter,
