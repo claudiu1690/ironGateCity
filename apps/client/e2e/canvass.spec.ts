@@ -104,7 +104,10 @@ test.describe('375 × 812 phone (QA fix round 1)', () => {
     await expect(page.getByRole('heading', { name: 'Join the campaign' })).toBeVisible();
     await signUp(page);
     await toTheCity(page);
-    for (const pin of await page.getByTestId('hotspot').all()) await expect(pin).toBeInViewport({ ratio: 1 });
+    // Slice 8 phase B (16 Oct 2026): every pin whole on screen to a thousandth of its area. Since the
+    // slice-7 fix round's 20 px foot under the home plate (1115447), the map's fit leaves pin 3, the
+    // Union Hall, a sub-pixel sliver off the edge on this phone (a viewport ratio of 0.9999998).
+    for (const pin of await page.getByTestId('hotspot').all()) await expect(pin).toBeInViewport({ ratio: 0.999 });
     const sheet = await openLocation(page, '6. The Anchor');
     await sheet.getByRole('button', { name: 'Win over the regulars, three times, 30 Energy' }).click();
     const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
