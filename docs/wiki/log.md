@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] note | Slice 7 QA report
+
+[[qa/slice-7-report|QA report]]: the `qa-nation` project (7 tests) passes; one major (the law book's tabler and division are placeholders), one minor (the plate's share bar), one wording question (*one bill per member per term*). Updated [[Slice 7 The Nation]], [[Open Questions]], [[Drift Report]].
+
 ## [2026-10-16] update | Slice 7 integration flags D-S7I-1 to D-S7I-3 settled by the designer
 
 The Collective's event order line reworded (*on the doorsteps tonight*; no other player-facing

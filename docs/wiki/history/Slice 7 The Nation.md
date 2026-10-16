@@ -131,7 +131,7 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 
 ## QA and leftovers
 
-Built; QA next (the integration Deviations list what to look at first). The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
+**QA 16 Oct 2026** ([[qa/slice-7-report|QA report]]; the `qa-nation` project, 7 tests, all pass): no blocker; **one major** (M1: the law book's rows read *put to Parliament by · passed … 0–0*, `getLawBook` placeholders in `nationService.ts`), one minor (the plate's share bar's left half opens the Town Hall, m1) and one wording question for the designer (*one bill per member per term*, m2). Races on stand, back, vote, table, vote on a bill, veto, the Governor's rule and Address, the President's Address and petitions: one effect and one charge each; the numbers, the Unrest ruling, a week away and the Mayor's wording hold. Not covered: the national election's and the Chair desk's keys, the cap, overrides, Rehabilitation's fade, a human clarity playtest. The integration Deviations still list what to look at first. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
 
 ## Commits
 

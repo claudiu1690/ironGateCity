@@ -284,6 +284,13 @@ export default defineConfig({
       dependencies: ['clearwater'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
+    // QA slice 7 (docs/qa/slice-7-report.md): the API races, the numbers and the laws in play.
+    {
+      name: 'qa-nation',
+      testMatch: /qa\.slice7\.spec\.ts/,
+      dependencies: ['governor'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
   ],
   webServer: [
     {
