@@ -36,11 +36,12 @@ async function publicExpose(
     {
       kind: 'expose',
       outcome: 'success',
-      createdAt: { $gte: new Date(dayStart(today - 1)), $lt: new Date(dayStart(today)) },
+      // The act's own clock (`performedAt`), not the insert's (the test clock moves the game's).
+      'result.performedAt': { $gte: new Date(dayStart(today - 1)).toISOString(), $lt: new Date(dayStart(today)).toISOString() },
     },
     { characterId: 1, result: 1 },
   )
-    .sort({ createdAt: -1 })
+    .sort({ 'result.performedAt': -1 })
     .lean();
   if (!log) return null;
   const out = (log.result as { effects?: { expose?: ExposeOutcome } } | undefined)?.effects?.expose;

@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { ActionLog, Candidacy, City, DossierEntry } from '@irongate/db';
-import type { AwardDoc, CharacterDoc, CityDoc, DossierEntryDoc, OfficeTermDoc, StoredPatron } from '@irongate/db';
+import { ActionLog, Candidacy, City, DossierEntry, LegacyEntry } from '@irongate/db';
+import type { AwardDoc, CharacterDoc, CityDoc, DossierEntryDoc, LegacyEntryDoc, OfficeTermDoc, StoredPatron } from '@irongate/db';
 import {
   BODYGUARD,
   DOSSIER,
@@ -294,10 +294,10 @@ async function lifeEdition(
 
   // The exposé yesterday (the author's own paper; every other reader's line is live at read).
   const log = await ActionLog.findOne(
-    { characterId: c._id, kind: 'expose', createdAt: { $gte: y.from, $lt: y.to } },
+    { characterId: c._id, kind: 'expose', 'result.performedAt': { $gte: y.from.toISOString(), $lt: y.to.toISOString() } },
     { result: 1 },
   )
-    .sort({ createdAt: -1 })
+    .sort({ 'result.performedAt': -1 })
     .session(session)
     .lean();
   const out = (log?.result as { effects?: { expose?: ExposeOutcome } } | undefined)?.effects?.expose;
@@ -361,8 +361,13 @@ async function lifeEdition(
     }
   }
 
-  // Legacy: the largest entry added in this settlement.
-  const best = [...i.legacyAdded].sort((a, b) => b.points - a.points)[0];
+  // Legacy: the largest entry added yesterday (an act's: an exposé, Protégé, a chapter) or in this settlement.
+  const acted = await LegacyEntry.find({ characterId: c._id, day: yesterday }).session(session).lean<LegacyEntryDoc[]>();
+  const rowsSeen = [
+    ...i.legacyAdded,
+    ...acted.filter((e) => !i.legacyAdded.some((r) => r.ref === e.ref)).map((e) => ({ ref: e.ref, kind: e.kind, points: e.points, day: e.day, params: e.params as LegacyRow['params'] })),
+  ];
+  const best = [...rowsSeen].sort((a, b) => b.points - a.points)[0];
   if (best) {
     const spend = toSpend({ total: i.legacyTotal, spent: c.legacy?.spent ?? 0 });
     kinds.push('legacyEntry');
