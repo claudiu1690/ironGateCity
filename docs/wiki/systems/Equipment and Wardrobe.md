@@ -7,7 +7,7 @@ status: partly built
 slice: "2 (two slots, starting kit, keepsakes); the Wardrobe designed for 8"
 gdd: ["§21", "§21.1", "§21.2", "§21.3", "§21.4", "§8.2", "§20.3"]
 adrs: ["0014", "0051", "0052"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Equipment and Wardrobe
@@ -48,6 +48,8 @@ What you wear is who you are in Irongate: **Charisma is worn** ([[Stats and Chec
 ## Status
 
 **Partly built.** Two slots, the starting kit and the keepsakes since [[Slice 2 Arrival|slice 2]]; armour used by run-ins since slice 5; review 5 renamed items (*Your father's coat* → *The demob suit*; ids kept). **Slice 8, building:** the rules (T1, 16 Oct 2026) and the **content** (T6, 16 Oct 2026: the catalogue, the shops, the copy) are in; **the server (T9, T10, 16 Oct 2026, phase B lane 1):** worn Charisma with the flat, item rows on every check, Party XP parts, the Wardrobe's procedures, dressing for arrival, outfits at the join, shops (buy, sell, the back room's bribe) with the record's surcharge, and the cards (`life.place`); **the client (T20, phase C lane P, `2af2468`):** the Me tab's block (it replaces the *Wearing* row), the chooser, *Everything you own*, the shop cards with the buy confirm, the sell sheet and the back room's row (from Rank 3), the journey's dress line. Not yet: forged papers at the checkpoint (the card's Charisma check). **Post-MVP:** Tier V, crafting, drops, trading.
+
+**Integration (17 Oct 2026, `8ae302a`):** the Town chip reads *nobody looks twice at the coat* under Charisma 20 (`wardrobeService.chipLine`, design §25 #2). The vocabulary sweep refuses *inventory, equipment, slot, tier, armour, utility, loadout, CHA* on slice-8 screens; slice 1's stat strip (*STR · INT · AGI · CHA*) is skipped and left for QA. ADRs 0051 and 0052 accepted.
 
 ## Decisions
 

@@ -7,7 +7,7 @@ status: built
 slice: "0; e2e projects added per slice and round; Vitest frozen 8 Oct 2026"
 gdd: []
 adrs: ["0004", "0070"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Checks and Testing
@@ -72,7 +72,10 @@ Package extras: `pnpm --filter @irongate/server check:voting-conversion`,
   `review4` spec also sweeps screens for system terms and war words; slice 7's specs sweep theirs
   with `nationKit.sweep` (the refused words *whip, Directive, recall, Legislature, National Control,
   no-confidence, Chancellor*, the war words, and *front* except *The Front*, *front door*, *front
-  page*; *ballot* allowed). `QA_SHOW_BUGS=1` shows known
+  page*; *ballot* allowed). Slice 8's specs call `nationKit.lifeSweep`: the same, plus the Wardrobe's
+  system words, *bodyguard, guard, escort, muscle, enforcer* (*a street enforcer* stays), *season* and
+  *Champion* (deferred) and *CHA*; *out front* is allowed. Slice 8's integration ran all 353 tests green
+  in nine chunks (17 Oct 2026). `QA_SHOW_BUGS=1` shows known
   bugs kept as expected failures.
 - First run: `pnpm --filter @irongate/client exec playwright install chromium`.
 

@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (v1); 2 (welcome edition, Letters); 3 (Election row, In Print); 4 (Issues, Herald); 5 (Heat, record); review 4 (local editions); voting rework (Council rule row)"
 gdd: ["§3.3"]
 adrs: ["0005", "0023", "0071", "0074"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # The Morning Paper
@@ -89,6 +89,8 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
 - **Designed, not built:** v6 Events (slice 6), the rest of v7 (slice 7),
   v8 patron Letters, the Dossier and *Ahead* rows (slice 8), v9 the *While you were away* row with
   its digest and *From the editor* (slice 9, [[adr/0071-while-you-were-away-built-at-read|ADR 0071]]).
+
+**Integration (17 Oct 2026, `8ae302a`):** *The Flat Waits* (priority 1) beats the Level 10 lines (priority 2) when the flat was bought the day before it lapsed (`lifeSettlement`'s flat facts no longer hide one another); the informant's Letters row reads *1 day of reports left*. The exposé's page is the outcome's (design §25 #4; no code change).
 
 ## Decisions
 

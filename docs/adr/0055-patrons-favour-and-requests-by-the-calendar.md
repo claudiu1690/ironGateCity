@@ -1,6 +1,6 @@
 # ADR 0055 — Patrons: embedded on the character; Requests arrive, expire and are paid by calendar arithmetic in the settlement
 
-**Status:** proposed (slice 8) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026) · **Date:** 2026-10-04
 
 ## Context
 

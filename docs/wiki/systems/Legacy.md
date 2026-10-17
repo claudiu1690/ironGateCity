@@ -7,7 +7,7 @@ status: partly built
 slice: "8 (server built 16 Oct 2026; client in phase C)"
 gdd: ["§17.3", "§14.11", "§10.4"]
 adrs: ["0057", "0052"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Legacy
@@ -49,6 +49,8 @@ Legacy is your **permanent, public political record**, shown on your profile (*L
 **Phase B, lane 2 (16 Oct 2026): the server is built** (T14): the record from terms, awards, the Unrest prize, an exposé, Protégé and an Ambition, the perks to buy, the paper's line. Not yet: survivals of a vote on the Chair or a removal, a pledged law (not read by the settlement), the Me tab and the profile (phase C).
 
 **MVP, slice 8, not built yet.** Planned for [[Slice 8 A Life in the City|slice 8]], record and perks together. The events it records (council terms, heroes, Issue awards) are already stored by slices 3–4, and ADR 0057 plans a back-fill so they count.
+
+**Integration (17 Oct 2026, `8ae302a`):** the playtest report counts perks taken and Legacy by day 30 (`packages/db/src/life.ts`). ADR 0057 accepted.
 
 ## Decisions
 

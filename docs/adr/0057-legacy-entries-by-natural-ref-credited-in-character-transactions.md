@@ -1,6 +1,6 @@
 # ADR 0057 — Legacy: entries in their own collection keyed by a natural ref; the total and perks embedded; every entry credited in a character transaction
 
-**Status:** proposed (slice 8; applies ADR 0020 and 0028) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026; applies ADR 0020 and 0028) · **Date:** 2026-10-04
 
 > **16 Oct 2026: the season's parts are deferred with ADR 0058** (the user: "let's leave the seasons for later"). Slice 8 builds this ADR without `legacy.seasonCredited`, `seasonCredits` and the kinds `champion` and `seasonAward`; the refs `champion:{season}` and `award:{season}:{kind}:{bracket}` are reserved for them. An absent `seasonCredited` will read as *nothing credited yet*, so adding them later needs no migration. Everything else below stands.
 

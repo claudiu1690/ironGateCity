@@ -3,12 +3,12 @@ type: history
 title: Slice 8 A Life in the City
 aliases: [Slice 8, A life in the city]
 tags: [slice, building]
-status: building
+status: built
 dates: 2026-10-04 (designed); 2026-10-16 (approved; the season deferred; bodyguards and the bar designed; phase A started)
 commits: [a350253, 3e04e18, 2bcd5d1, bcc6cef, 11d2c41, 065ad16, cf934e2]
 gdd: ["§6.7", "§8.2", "§10", "§12", "§14.12", "§17.1", "§17.2", "§17.3", "§17.4", "§19.3", "§21", "§22"]
 adrs: ["0051", "0052", "0053", "0054", "0055", "0056", "0057", "0058", "0088"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Slice 8 A Life in the City
@@ -116,6 +116,13 @@ What landed (details in [[tech/slice-8#Deviations (as built)|the tech design's D
 ## Phase C rulings (17 Oct 2026, the designer; design §25)
 
 Six answers to the lanes' deviations, strings in `copy.life` and the design corrected in the same commit; the code is the developer's: (1) the odds words stay three, a row at the 95 ceiling adds *as good as odds get* (the minder's card and run-in row; `HireRowView.capped`); (2) the Town chip below Charisma 20 reads *nobody looks twice at the coat* (`chipTownPlain`; `wardrobeService.chipLine`); (3) lane Q's copy confirmed, three source words and two empty states reworded, nothing to move out of UI code; (4) **the exposé's page is the outcome's**: a Success is the front page on either angle, the hints and the plainly title reworded, no code; (5) *The Flat Waits* (1) outranks Level 10 (2) and the numbers stand; the selector must sort every personal candidate together (developer); (6) the patron card goes first on the sheet, above the tickets (`PlaceDossierCards`).
+
+## Integration (17 Oct 2026, the developer; T24, T25)
+
+- **The full e2e, once:** all 353 tests in nine chunks green (`--no-deps`, ports 4273 / 3301), after two fixes: `qa-review5`'s *m5* spec read the run-in pointer before its close landed (it now polls), and slice 7's known `qa-risk` red, the plate's share bar under 44 px, is a 44 px button centred over the unchanged bar.
+- **T24:** `lifeSweep` on 24 slice-8 screens; the playtest report's *life* section (`packages/db/src/life.ts`); *1 day of reports left*.
+- **Design §25's code:** the ceiling tag (`HireRowView.capped`), the Town chip under Charisma 20, the patron card above the tickets, and *The Flat Waits* (the fault was `lifeSettlement`'s flat facts, not the selector). The exposé needed no change.
+- **T25:** the README (hooks, the Life buttons, six walk-throughs), ADRs 0051–0057 and 0088 accepted, the plan's §5 row. Details: [[tech/slice-8|tech/slice-8]] *Deviations, Integration*.
 
 ## QA and leftovers
 

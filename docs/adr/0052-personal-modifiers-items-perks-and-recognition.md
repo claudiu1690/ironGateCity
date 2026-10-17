@@ -1,6 +1,6 @@
 # ADR 0052 — Personal modifiers: what you wear and your lasting perks beside the place's sources; recognition on rival ground
 
-**Status:** proposed (slice 8; beside ADR 0030 and 0044) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026; beside ADR 0030 and 0044) · **Date:** 2026-10-04
 
 ## Context
 

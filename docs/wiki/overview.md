@@ -2,7 +2,7 @@
 type: overview
 title: overview
 aliases: [Overview, Home]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Irongate City — the wiki
@@ -26,9 +26,9 @@ rule and number. How the wiki is kept: [[CLAUDE|operating manual]]. Full catalog
 - **Built, QA'd and fixed:** [[Slice 7 The Nation|slice 7, the nation]] (approved 15 Oct; built,
   QA'd and fixed 16 Oct; for the user to play: [[review/slice-7-build-notes|build notes]]; a human
   playtest of Parliament's clarity still to do).
-- **Designed, not built:** slices 8–9 ([[Slice 8 A Life in the City|a life in the city]],
-  phase A started 16 Oct, with [[Political Seasons]] deferred out of it that day;
-  [[Slice 9 Launch Readiness|launch readiness]]).
+- **Built and integrated, QA next:** [[Slice 8 A Life in the City|slice 8, a life in the city]]
+  (16–17 Oct; the full e2e green; [[Political Seasons]] deferred out of it).
+- **Designed, not built:** [[Slice 9 Launch Readiness|slice 9, launch readiness]].
 - **Running locally only** until the end of the project; no hosting yet.
 - What's unresolved: [[Open Questions]] · where sources disagree: [[Drift Report]] · the user's
   calls: [[Decision Log]].

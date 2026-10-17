@@ -1,6 +1,6 @@
 # ADR 0051 — The Wardrobe: four slots of inventory uids, outfits as saved uid sets, shops as cards on places
 
-**Status:** proposed (slice 8; extends ADR 0014) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026; extends ADR 0014) · **Date:** 2026-10-04
 
 ## Context
 

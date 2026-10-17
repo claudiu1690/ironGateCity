@@ -1,6 +1,6 @@
 # ADR 0056 — The flat: prepaid rent as a day key, every bonus a function of the day, Rested at the boundary in the settlement's projection
 
-**Status:** proposed (slice 8; extends ADR 0030 §5) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026; extends ADR 0030 §5) · **Date:** 2026-10-04
 
 ## Context
 

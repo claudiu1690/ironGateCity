@@ -2363,3 +2363,43 @@ From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086; **applied to the secti
 - The Dossier's empty states, the informants' tab and *Recruit as an informant* (Associate gate) have no spec; the desktop layout (§16: 640 px list, side column) is the phone's, centred.
 - The legacy test entry's words read *Hero of the city* (lane 2's `test:{n}` kind).
 - The journey card's forged papers: `Travel.tsx` already prints the odds word for a checked, ungated choice, so no client change was needed; not covered by a spec.
+
+### Integration (17 Oct 2026; T24, T25 and design §25's code; commits `8ae302a`, `2719986` and this one)
+
+**Testing.** No unit tests (the user's rule). The fast check (`pnpm art:check && pnpm turbo run lint typecheck build`) is green (14 of 14). **The full e2e, once** (ports 4273 / 3301, `--no-deps`, `--output=../../.int8-results`, in nine foreground chunks under ten minutes; the results folder deleted, the docs screenshots the run rewrote reverted except three slice-8 ones retaken on purpose): **353 of 353 pass** after one fix.
+
+| Chunk | Projects | Result |
+|---|---|---|
+| 1 | `phone`: arrival, canvass, chapter, clouds, day, map, places, review1, session, tiles | 29/29 |
+| 2 | `phone`: qa.slice2, qa, review3, qa.slice7 | 42/42 |
+| 3 | `small-phone`, `landscape`, `desktop`, `council`, `qa-council`, `dev-panel`, `travel`, `capital` | 24/24 |
+| 4 | `qa-capital`, `home-map`, `missions`, `rival`, `qa-risk` | 40/40 (slice 7's known *the quarter* red is fixed, below) |
+| 5 | `review4`, `qa-review4`, `review5` | 42/42 |
+| 6 | `qa-review5` | 94/95, then the one red fixed and green alone (below) |
+| 7 | `voting`, `qa-voting`, `review6` | 48/48 |
+| 8 | `faction`, `favours`, `events`, `qa-together`, `chair`, `nation`, `removal`, `petition` | 15/15 |
+| 9 | `clearwater`, `governor`, `qa-nation`, `wardrobe`, `bodyguard`, `bar`, `dossier`, `patron`, `home`, `chapter8` | 18/18 |
+
+**The reds and their fixes.**
+- **`qa-review5` *m5 a resolved run-in left open* (reproducible twice):** after Continue on the newer run-in's result, the spec read `character.me` as soon as the heading showed the older one; the two talks share a headline, so the heading proved nothing and the read beat the close. The spec now polls the pointer before reading it. The race is the spec's; the gate's slice-8 invalidations (`invalidateLife`) made it show.
+- **`qa-risk` *360 × 640 / 812 × 375: the quarter*** (slice 7's known red, the plate's share bar 360 × 6 and 258 × 17 under the 44 px rule): the bar is drawn as before (`share-bar`, a plain `div`, its height unchanged) with a 44 px button (`share-bar-button`) absolutely centred over it, so nothing moves; the rule line's target (z-20) stays on top where the two meet, and slice 7's check that the rule's target ends at the bar's top still holds.
+
+**T24.**
+- **The vocabulary sweeps** are `lifeSweep(page, where)` in `e2e/nationKit.ts`, called after every slice-8 screenshot in the seven slice-8 specs and on the chapter8 spec's Dossier and Me tabs (24 screens). It refuses slice 7's list, the war words and the *front* rule (*front page*, *The Front*, and *out front* allowed: the Union Hall's blurb says *columns out front*, a building's front like *the front door*), then the Wardrobe's system words (*inventory, equipment, slot, tier, armour, utility, loadout, Black Market*), *bodyguard, guard, escort, muscle, enforcer, protection, hired hand* (*a street enforcer*, the opponent, stays), *season* and *Champion* (the season is deferred, so they are not allowed), and *CHA* (case-sensitive). **Left alone, for QA:** slice 1's stat strip on the Me tab reads *STR 8 INT 12 AGI 5 CHA 5*; the sweep skips that strip (it is not a slice-8 string), though design §18 Q13 would refuse *CHA* in a player string.
+- **The playtest report's life section** (`packages/db/src/life.ts`, a pure builder; `lifeTables`; wired in `scripts/playtestReport.ts` and `--json` as `life`). Test members, boosted testers and `source: 'test'` items are left out. What the rows do not hold, said in the section: outfit changes and worn Charisma by day are not logged; sales, bribes and rents come from request logs (seven days); Requests are the stored ones; the day-14 clocks are rebuilt from stored rows (*a chapter dated* is not). A run against an empty memory replica set prints every line (no tester data: the e2e's database dies with its server).
+
+**Design §25's code (the designer's rulings, relayed by the coordinator).**
+- **#1** `HireRowView.capped` (the mission-at-home chance ≥ 95, `bodyguardService.cardChance`); `HireCard` and `MinderEncounterRow` add *as good as odds get*. `bodyguard.spec.ts` checks the minder's row.
+- **#2** `wardrobeService.chipLine`: *Town* uses `chipTown` from Charisma 20 (`RECOGNITION.cha`'s lowest edge), else `chipTownPlain`.
+- **#4** (the exposé's page) needed no code: a Success is page one on either angle. An edit that printed a plain Success on page three was reverted before commit.
+- **#5** *The Flat Waits*: the selector was already one stable sort over every personal candidate (`selectHeadlines`); the fault was in `lifeSettlement`'s flat facts, an `if / else if` that let *bought yesterday* hide *waiting since this morning*. The purchase and the rent are now separate facts, so a flat bought and lapsed on the same day (the spec's hook) prints *The Flat Waits* (priority 1) over the Level 10 lines (priority 2). `home.spec.ts` reads it in the paper.
+- **#6** `PlaceDossierCards` takes `part`: `part="patron"` is the sheet's first child, above the tickets; `part="cards"` (the exposé's ticket, the station's card) stays first in the card slot. `patron.spec.ts` checks the card sits above the first ticket.
+- **Plurals:** the informant's Letters row reads *1 day of reports left* (`lifeSettlement`). The desk's Dossier row is the designer's string: `copy.life.dossier.paper.desk` should read `` (n, m, when) => `${n} ${n === 1 ? 'entry' : 'entries'} · ${m} ${m === 1 ? 'goes' : 'go'} stale ${when}` ``, and `copy.life.dossier.informantLine` has the same *1 days* case.
+
+**T25.** The README: the slice-8 hooks, the report's life section, the dev panel's Life rows, and six walk-throughs (dressing for rival ground, a Case File to the front page, a patron to Associate, a flat that lapses and waits, hiring a doorman, a round and a plate at the bar; no season). ADRs 0051–0057 and 0088 accepted; 0058 stays Deferred. The plan's §5 row for slice 8 as built.
+
+**For QA.**
+- The share bar's new target reaches 19 px above and below the 6 px bar on a short phone: check a pin or the rule line right against the plate's foot still takes its own tap.
+- The flat's two facts can now both hold (bought yesterday and lapsed); the desk and Letters were not changed.
+- The stat strip's *CHA* (above); *columns out front* in the Union Hall's blurb, allowed by the sweep.
+- Not run: T18's month ten times; a report run over real tester data.

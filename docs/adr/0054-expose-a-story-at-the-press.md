@@ -1,6 +1,6 @@
 # ADR 0054 — The exposé: a three-step story at the press, with its own pointer, a keyed check, and the swing in the name's town
 
-**Status:** proposed (slice 8; applies ADR 0013) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026; applies ADR 0013) · **Date:** 2026-10-04
 
 ## Context
 

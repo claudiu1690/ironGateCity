@@ -1,6 +1,6 @@
 # ADR 0053 — The Dossier: one collection for entries, Case Files and informants; the slot count is counted, not stored; entries land in the act's transaction
 
-**Status:** proposed (slice 8) · **Date:** 2026-10-04
+**Status:** accepted (slice 8, built 17 Oct 2026) · **Date:** 2026-10-04
 
 ## Context
 

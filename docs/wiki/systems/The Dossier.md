@@ -7,7 +7,7 @@ status: partly built
 slice: "8 (server built 16 Oct 2026; client in phase C)"
 gdd: ["§10", "§10.1", "§10.2", "§10.3", "§10.4", "§10.5"]
 adrs: ["0053", "0054", "0052"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # The Dossier
@@ -54,6 +54,8 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 **Phase B, lane 2 (16 Oct 2026): the server is built** (T11, T12): entries from every source but society calls, Case Files, selling at a station, informants, the exposé with its swing in the name's town, the burn and Legacy +2, and the Headline Story's *Attach a Case File* (+50 % on the swing). The tab is phase C.
 
 **Slice 8, building:** the rules (T2) and the content (T6) are in since 16 Oct 2026; the collection, the server and the tab are not. Slice-5 surveillance and theft missions and the cells' and ward's taps already exist; they gain their Dossier payloads in slice 8. Safe intelligence taps pay XP and Iron only until then.
+
+**Integration (17 Oct 2026, `8ae302a`):** the full e2e is green; the playtest report's life section counts entries by source, the stale share, files, exposés by angle and outcome, sales and informants (`packages/db/src/life.ts`). ADRs 0053 and 0054 accepted.
 
 ## Decisions
 

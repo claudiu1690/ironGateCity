@@ -1,7 +1,7 @@
 ---
 type: overview
 title: Index
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Index — the wiki catalog
@@ -44,7 +44,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Ambitions]] — Three 12-chapter personal stories, at most one chapter a week, never failing; chapters 1–2 partly built.
 - [[Patronage and Favours]] — Patrons Crane and Marr (slice 8: rules, content and server in, 16 Oct; the card's screen is phase C), favours between party mates (slice 6), the welcome favour at the HQ (built).
 - [[Legacy]] — A permanent public record of political deeds plus eight small lasting perks; slice 8: server built (16 Oct), the Me tab in phase C.
-- [[Residence]] — Built: the political home (500 Iron, Rank 2, 7 days between moves) and Irongate lodgings. Slice 8: the room and the flat.
+- [[Residence]] — Built: the political home (500 Iron, Rank 2, 7 days between moves) and Irongate lodgings. Slice 8: the room's Rested and the flat (built).
 
 ## Systems — the city and the map
 
@@ -115,7 +115,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Slice 5 Risk]] — Built 5 Oct: 22 missions, Heat and record, the cells, the infirmary, run-ins, rival ground.
 - [[Slice 6 Together]] — Built, QA'd and fixed 15 Oct ([[review/slice-6-build-notes|build notes]]): Campaign Events (the Doorstep Drive, Rally, Poster Night, three signature events), the Faction tab, chat and presence, bail and visit favours.
 - [[Slice 7 The Nation]] — Built, QA'd and fixed 16 Oct ([[review/slice-7-build-notes|build notes]]): terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
-- [[Slice 8 A Life in the City]] — Approved and building (phase A, 16 Oct): the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, bodyguards and the bar; rules T1–T3, schemas T5/T27 and the designer's content (T6) are in; phase A's questions settled 16 Oct (Requests count Success or Partial; alt texts final); phase B's server built (lanes 1 and 2, T13 included); the season deferred.
+- [[Slice 8 A Life in the City]] — Built and integrated (17 Oct; QA next): the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, bodyguards and the bar; phases A–C, design §25's rulings in code, the full e2e green (353 tests), the vocabulary sweep and the report's life section; the season deferred.
 - [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish; ends locally, with hosting and the betas after it.
 - [[Review 1]] — 30 Sep, the first play-through: jobs become a wage, first day on your best stat, labels explained, orders-complete modal.
 - [[Review 2]] — 30 Sep: plain words for players, odds maths hidden, Political Capital in full, the Election card, map interaction.

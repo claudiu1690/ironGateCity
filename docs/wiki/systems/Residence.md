@@ -7,7 +7,7 @@ status: partly built
 slice: "4 (residence and the capital's lodgings); the flat designed for 8"
 gdd: ["§14.11", "§17.4", "§6.3"]
 adrs: ["0026", "0056", "0084"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Residence
@@ -48,7 +48,9 @@ Two different "homes" matter. Your **residence** is your **political home**: whe
 
 **Slice 8 phase B, lane 2 (16 Oct 2026): the flat is built on the server** (`apps/server/src/services/homeService.ts`: `home.get/buyFlat/payRent`; ADR 0056). Rent is a day key; a lapse writes nothing and the flat waits; Rested +25 at the boundary while it counts (+10 the room), the cap +50; the paper's *Rent Due* and *The Flat Waits*. The Me tab's card is phase C.
 
-**Built:** residence and moving, district to district, and the Irongate lodgings ([[Slice 4 The Battleground|slice 4]]; the Lodgings card reworded in [[Review 4]]). **Designed, not built:** Clearwater as a residence with lodgings at the Rows (slice 7); the rented room's +10 Rested and the flat (slice 8).
+**Built:** residence and moving, district to district, and the Irongate lodgings ([[Slice 4 The Battleground|slice 4]]; the Lodgings card reworded in [[Review 4]]). Clearwater as a residence with lodgings at the Rows (slice 7). **Built in slice 8 (16 Oct 2026):** the rented room's +10 Rested and the flat (`homeService`, the Me tab's *Where you sleep*).
+
+**Integration (17 Oct 2026, `8ae302a`):** a flat bought and lapsed on the same day now prints *The Flat Waits*: the purchase and the rent are separate facts in `lifeSettlement` (the selector was already one sort by priority). ADR 0056 accepted.
 
 ## Decisions
 

@@ -9,6 +9,14 @@ updated: 2026-10-17
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-17] build | Slice 8 integration (T24, T25)
+
+The full e2e green (353 tests, nine chunks); the slice-8 vocabulary sweep (`lifeSweep`), the report's life section, design §25's
+code (the ceiling tag, the Town chip, the patron card first, *The Flat Waits*), the share bar at 44 px, ADRs 0051–0057 and 0088
+accepted (`8ae302a`, `2719986`). Updated [[Slice 8 A Life in the City]], [[Bodyguards]], [[Equipment and Wardrobe]],
+[[Patronage and Favours]], [[Residence]], [[The Morning Paper]], [[The Dossier]], [[Legacy]], [[Checks and Testing]],
+[[Dev Panel and Local Setup]], [[Drift Report]] (S8-5 done, S8-6 new).
+
 ## [2026-10-17] update | Slice 8 phase C rulings (the designer)
 
 Six rulings on the lanes' deviations (design §25): the odds words stay three with a ceiling tag,

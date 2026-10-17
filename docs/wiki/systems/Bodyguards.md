@@ -7,7 +7,7 @@ status: designed
 slice: "8 (designed 16 Oct 2026; building)"
 gdd: ["§12", "§12.1", "§20.1", "§18.3", "§1.5", "§25"]
 adrs: ["0088", "0056", "0032"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Bodyguards
@@ -43,6 +43,8 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 ## Status
 
 **Server built (slice 8 phase B, 16 Oct 2026):** the hire, the renewal, the card, his row at every run-in, *minded* with his line. Waiting: the paper's two lines (lane 2's paper, T16), the dev hooks (T17, built `908d996`). **The client is built (T32, `2af2468`, `6bb7ff8`):** the hire card, *Walking with you*, his run-in row (dimmed against the police) and the result's lines. The user moved bodyguards into the MVP on 14 Oct 2026; the design above replaces GDD §12's v3.0 contract (hire fee, two at a time, auto-renew, three hidden modifiers).
+
+**Integration (17 Oct 2026, `8ae302a`):** the full e2e is green; design §25 #1 is built: a row whose chance sits at the ceiling (95) adds *as good as odds get* (`HireRowView.capped`, `bodyguardService.cardChance`; the minder's hire row and his run-in row). Slice-8 screens are swept for *bodyguard, guard, escort, muscle, enforcer* (`lifeSweep`; *a street enforcer* stays). ADR 0088 accepted.
 
 ## Decisions
 

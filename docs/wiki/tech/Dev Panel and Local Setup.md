@@ -7,7 +7,7 @@ status: built
 slice: "0 (local DB); 3 (dev panel); a button set per slice to 5, review 5, voting rework"
 gdd: []
 adrs: ["0001", "0004", "0072"]
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Dev Panel and Local Setup
@@ -95,7 +95,7 @@ does the rest.
 
 **Operator scripts** against any `MONGODB_URI`: `pnpm admin:boost --email … [--dry-run]`,
 `pnpm report:playtest [--json]` (run within a week of a playtest: request logs expire; slice 7
-adds *The nation*, from `packages/db/src/nation.ts`). The README has the slice-7 term hooks, the
+adds *The nation*, from `packages/db/src/nation.ts`; slice 8 *A life in the city*, from `packages/db/src/life.ts`). The README also has slice 8's hooks, the panel's 26 **Life** buttons and six walk-throughs (dressing for rival ground, a Case File to the front page, a patron to Associate, a flat that lapses and waits, hiring a doorman, a round and a plate at the bar). The README has the slice-7 term hooks, the
 panel's nation buttons and six walk-throughs (a Governor's week, the Chair, a bill, a national
 election on the test clock, a petition, Clearwater).
 

@@ -1,6 +1,6 @@
 # ADR 0088 — Bodyguards: a run-in row on a prepaid day-key contract; the bar's buffs: lazy state read as personal modifiers
 
-**Status:** proposed (slice 8; applies ADR 0032, 0052, 0056) · **Date:** 2026-10-16
+**Status:** accepted (slice 8, built 17 Oct 2026; applies ADR 0032, 0052, 0056) · **Date:** 2026-10-16
 
 ## Context
 
