@@ -3271,7 +3271,7 @@ export const copy = {
       /** The wardrobe sheet's groups and empty states (screens §5, §15). */
       coats: 'Coats',
       keepsakes: 'Keepsakes',
-      sellsAtMarket: (n: number) => `Sells at a market: ${n} things`,
+      sellsAtMarket: (n: number) => `Sells at a market: ${n} ${n === 1 ? 'thing' : 'things'}`,
       nothingYet: (hint: string) => `Nothing yet · ${hint}`,
       hints: {
         accessory: 'The market sells a hat',
@@ -3345,9 +3345,9 @@ export const copy = {
       stale: 'stale',
       andMore: (n: number) => `and ${n} more`,
       makeCaseFile: 'Make a Case File',
-      makeCaseFileN: (n: number) => `Make a Case File · ${n} entries`,
+      makeCaseFileN: (n: number) => `Make a Case File · ${n} ${n === 1 ? 'entry' : 'entries'}`,
       /** A burned name's line (§21.1 Q19): entries still land; no exposé for {n} days. */
-      burned: (weekday: string, n: number) => `in the paper ${weekday} · nothing new for ${n} days`,
+      burned: (weekday: string, n: number) => `in the paper ${weekday} · nothing new for ${daysN(n)}`,
       takeToPaper: 'Take it to the paper',
       atPress: (press: string, street: string) => `at ${press}, ${street}`,
       atHeraldHouse: 'at Herald House, Old Town',
@@ -3357,7 +3357,7 @@ export const copy = {
       recruit: 'Recruit as an informant',
       needsPattern: 'Needs a pattern line',
       needsAssociate: (patron: string) => `Needs Associate with ${patron}`,
-      informantLine: (n: number, weekday: string) => `${n} days of reports left · next ${weekday}`,
+      informantLine: (n: number, weekday: string) => `${daysN(n)} of reports left · next ${weekday}`,
       twoAtMost: 'Two at most',
       /** §21.1 Q17: a file that cannot be printed. */
       notOwnParty: 'Not against your own party',
@@ -3383,7 +3383,8 @@ export const copy = {
       paper: {
         fromInformant: 'From your informant',
         gossip: (patron: string, name: string) => `From ${patron}: a word about ${name}`,
-        desk: (n: number, m: number, when: string) => `${n} entries · ${m} go stale ${when}`,
+        desk: (n: number, m: number, when: string) =>
+          `${n} ${n === 1 ? 'entry' : 'entries'} · ${m} ${m === 1 ? 'goes' : 'go'} stale ${when}`,
         deskNone: (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'}`,
       },
       /** The tab's empty states (screens §15). */
@@ -3426,7 +3427,7 @@ export const copy = {
       notWhileWanted: "Not while you're Wanted · the doorman has the list",
       kicker: (paper: string, n: number) => `Exposé · ${paper} · step ${n} of 3`,
       step1: 'The file and the angle',
-      lines: (n: number) => `${n} lines`,
+      lines: (n: number) => `${n} ${n === 1 ? 'line' : 'lines'}`,
       /**
        * Phase C ruling (design §25 #4): the outcome decides the page (a Success is the front page
        * on either angle), the angle decides the split and the difficulty. Neither hint names a page.
@@ -3669,7 +3670,7 @@ export const copy = {
       }),
       caseFile: (subject: string, n: number, kinds: string) => ({
         headline: `A Case File on ${subject}`,
-        body: `${n} entries bound into one file: ${kinds}. It won't go stale. Take it to a paper, sell it at a station, or turn it.`,
+        body: `${n} ${n === 1 ? 'entry' : 'entries'} bound into one file: ${kinds}. It won't go stale. Take it to a paper, sell it at a station, or turn it.`,
       }),
       dossierSold: () => ({
         headline: 'A word by the left-luggage',
@@ -3761,7 +3762,7 @@ export const copy = {
       noPattern: 'An informant needs a pattern line in the file.',
       needsAssociate: (patron: string) => `Associate with ${patron} first.`,
       twoInformants: 'Two informants at most. Wait for one to run out.',
-      burned: (n: number) => `That name is in the paper already; nothing new for ${n} days.`,
+      burned: (n: number) => `That name is in the paper already; nothing new for ${daysN(n)}.`,
       ownParty: 'Not against your own party.',
       noParty: 'Nobody to print it against.',
       printedToday: 'Printed today; tomorrow.',

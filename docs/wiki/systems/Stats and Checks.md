@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (checks, training); review 1 (best-stat checks, First day); review 2 (odds as words); review 4 (starting stats); slice 5 (tier-2 ladder, Agility quarters)"
 gdd: ["§8", "§8.1", "§8.2", "§8.3", "§8.4", "§8.5"]
 adrs: []
-updated: 2026-10-14
+updated: 2026-10-17
 ---
 
 # Stats and Checks
@@ -89,8 +89,15 @@ Charisma from a wardrobe beyond the starting coats (slice 8), Charisma's vote ap
 - [[Review 2]]: no percentage anywhere (Appendix C #35).
 - [[Review 4]]: one stat choice of +6 / +1 replaces six answers (Appendix C #91); no CHA base.
 - 3 Oct 2026 (slice 5): stat targets raised; the tier-2 ladder set against them (Appendix C #15).
+- 17 Oct 2026 (slice 8 integration, the designer): the Me tab's stat strip prints the four names
+  (*Strength · Intelligence · Agility · Charisma*, `copy.statNames`), never *STR / CHA*; the
+  abbreviations live only in code and test ids ([[design/slice-8-life#25.1 Integration (17 Oct 2026): plurals, and the Me tab's stat strip|design §25.1 #8]]).
 
 ## Open questions / drift
+
+> [!warning] Drift
+> **The Me tab's strip still reads *STR · INT · AGI · CHA*** (`apps/client/src/routes/me.tsx`,
+> slice 1's labels) against GDD §1.5 and the ruling above. Drift row S8-7, the developer's.
 
 > [!warning] Drift
 > **GDD §8 vs code (the CHA base).** Since 14 Oct 2026 GDD §8.1, §8.2 and §8.5 agree: **no origin

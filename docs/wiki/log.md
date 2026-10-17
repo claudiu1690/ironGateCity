@@ -9,6 +9,14 @@ updated: 2026-10-17
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-17] update | Slice 8 integration: plurals and spelled-out stats (the designer)
+
+Eight `copy.life` strings that read wrong at 1 now pluralise (the desk's Dossier row, the informant's
+line, the burned name's lines, the wardrobe's *things*, the exposé's *lines*, the *Bound* body); the
+Me tab's stat strip ruled to print *Strength · Intelligence · Agility · Charisma* from `copy.statNames`
+(design §25.1 #7–8). Updated [[Drift Report]] (S8-6 done, S8-7 new for the developer),
+[[Stats and Checks]].
+
 ## [2026-10-17] build | Slice 8 integration (T24, T25)
 
 The full e2e green (353 tests, nine chunks); the slice-8 vocabulary sweep (`lifeSweep`), the report's life section, design §25's
