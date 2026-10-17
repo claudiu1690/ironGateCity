@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §15.1, T20 part, T23; screens §9.2, §10, §12): the flat and Legacy on the Me
@@ -44,17 +45,20 @@ test('the flat: bought, lapsed and waiting, paid again; Legacy and a lasting per
   await home.scrollIntoViewIfNeeded();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.screenshot({ path: `${SHOTS}/me-home.png` });
+  await lifeSweep(page, 'me-home');
 
   // 2. The rent runs out today (hook); the next morning the flat waits (nothing is taken).
   await hook(page, 'home', { paidThroughDay: 'today' });
   await page.request.post('/api/test/clock', { data: { advanceMs: 24 * 3_600_000 } });
   await page.request.post('/api/test/city-day', { data: {} });
   await page.goto('/paper');
-  // The desk's row says it; *The Flat Waits* (priority 2) may lose the two personal slots to this
-  // player's Level 10 lines on the same morning (lane 2's note), so the spec reads the desk.
+  // *The Flat Waits* (priority 1, design §25 #5) takes a personal slot over this player's Level 10
+  // lines (priority 2) on the same morning; the desk's row says it too.
+  await expect(page.getByTestId('headline').filter({ hasText: 'The Flat Waits' })).toBeVisible();
   await expect(page.getByTestId('desk-sleep')).toHaveText('A flat in Coalport · the rent is out');
   await page.getByTestId('desk-life').scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/paper-desk-life.png` });
+  await lifeSweep(page, 'paper-desk-life');
   await page.goto('/me');
   home = await openBlock(page, 'me-home');
   await expect(home.getByTestId('home-waits')).toHaveText('Your flat waits · pay a week to sleep there');
@@ -78,6 +82,7 @@ test('the flat: bought, lapsed and waiting, paid again; Legacy and a lasting per
   await expect(sleep.getByTestId('perk-take')).toHaveText(/^Take it · \d+ Legacy$/);
   await legacy.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/me-legacy.png` });
+  await lifeSweep(page, 'me-legacy');
   await sleep.getByTestId('perk-take').click();
   const lasting = modal(page);
   await expect(lasting.getByTestId('stamp')).toHaveText('Lasting');

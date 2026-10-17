@@ -67,6 +67,7 @@ export function HireCard({ card, onHire, onRenew, pending, notice }: HireCardPro
               </span>
               <span className="font-mono text-[11px] leading-snug" data-testid="hire-odds">
                 {m.stepsInLine(oddsWordOf(r.word))}
+                {r.capped ? ` · ${m.asGoodAsTheyGet}` : ''}
               </span>
               <span className="font-mono text-[10.5px] leading-snug text-muted">{m.against}</span>
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -266,7 +267,9 @@ export function MinderEncounterRow({ minder, best, disabled, pending, onChoose }
           )}
         </span>
         <span className="font-mono text-[11px] opacity-85" data-testid="run-in-line">
-          {blocked ? m.notAgainstPolice : `${copy.odds.band(minder.chance ?? 0)} · ${m.hisStrength}`}
+          {blocked
+            ? m.notAgainstPolice
+            : `${copy.odds.band(minder.chance ?? 0)}${(minder.chance ?? 0) >= 95 ? ` · ${m.asGoodAsTheyGet}` : ''} · ${m.hisStrength}`}
         </span>
       </span>
     </button>

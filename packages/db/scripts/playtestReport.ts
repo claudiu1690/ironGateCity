@@ -5,12 +5,13 @@
  * 4), risk (slice 5, tech design §15.2) and review 4 (tech design docs/tech/review-4.md §18.3: the
  * prologue, the favour, the journey's cards, the Town Hall, the cells' marks and orders off), boosted
  * testers apart where a section says so, together (slice 6) and the nation (slice 7, tech design
- * docs/tech/slice-7.md §15.2). Add `--json` for machine-readable output.
+ * docs/tech/slice-7.md §15.2) and a life in the city (slice 8, docs/tech/slice-8.md §15.2). Add `--json`
+ * for machine-readable output.
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getContent, isWelcomeAction } from '@irongate/content';
-import { bestTrainedStat } from '@irongate/rules';
+import { bestTrainedStat, dayKey } from '@irongate/rules';
 import type { ActionResult, CardBy } from '@irongate/rules';
 import {
   ActionLog,
@@ -42,6 +43,8 @@ import {
   LawModel,
   NationalElection,
   Petition,
+  DossierEntry,
+  LegacyEntry,
   connectDb,
   disconnectDb,
 } from '../src';
@@ -58,6 +61,7 @@ import { buildReview4Report, review4Tables } from '../src/review4Report';
 import { buildTogetherReport, togetherTables } from '../src/together';
 import { buildNationReport, nationTables } from '../src/nation';
 import type { NationCandidacyRow, NationFactionElectionRow, Office } from '../src/nation';
+import { buildLifeReport, lifeTables } from '../src/life';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
 if (!process.env.MONGODB_URI && existsSync(serverEnv)) process.loadEnvFile(serverEnv);
@@ -754,9 +758,81 @@ try {
     })),
   });
 
+  // Slice 8 (tech design §15.2): a life in the city. Test members and boosted testers left out.
+  const lifeDay = (d: Date | string | undefined | null) => dayKey(new Date(d ?? 0).getTime());
+  const life = buildLifeReport({
+    now: new Date(),
+    characters: (
+      await Character.find(
+        {},
+        { userId: 1, playtest: 1, createdAt: 1, inventory: 1, patrons: 1, home: 1, legacy: 1 },
+      ).lean()
+    ).map((c) => ({
+      id: c._id.toHexString(),
+      userId: String(c.userId),
+      boosted: c.playtest?.boosted === true,
+      joinDay: lifeDay(c.createdAt),
+      inventory: (c.inventory ?? []).map((x) => ({ itemId: x.itemId, day: x.day, source: String(x.source) })),
+      patrons: (c.patrons ?? []).map((p) => ({
+        id: p.id,
+        favour: p.favour,
+        firstVisitDay: p.firstVisitDay ?? null,
+        tierDays: p.tierDays ?? {},
+        requests: (p.requests ?? []).map((q) => ({
+          arrivedDay: q.arrivedDay,
+          untilDay: q.untilDay,
+          doneAt: q.doneAt ? Number(q.doneAt) : null,
+        })),
+      })),
+      flat: c.home?.flat ?? null,
+      legacy: { total: c.legacy?.total ?? 0, perks: { ...(c.legacy?.perks ?? {}) } },
+    })),
+    itemTier: Object.fromEntries(content.items.map((it) => [it.id, it.tier ?? null])),
+    actions: (
+      await ActionLog.find(
+        {},
+        { characterId: 1, kind: 1, outcome: 1, createdAt: 1, 'result.effects.expose.angle': 1 },
+      ).lean()
+    ).map((a) => ({
+      characterId: a.characterId.toHexString(),
+      day: lifeDay(a.createdAt),
+      kind: String(a.kind),
+      outcome: String(a.outcome),
+      angle:
+        (a.result as { effects?: { expose?: { angle?: 'plain' | 'headline' } } } | undefined)?.effects?.expose
+          ?.angle ?? null,
+    })),
+    requests: (
+      await RequestLog.find(
+        { kind: { $in: ['shop.sell', 'shop.bribe', 'home.payRent'] } },
+        { characterId: 1, kind: 1, createdAt: 1 },
+      ).lean()
+    ).map((r) => ({ characterId: r.characterId.toHexString(), kind: r.kind, day: lifeDay(r.createdAt) })),
+    dossier: (
+      await DossierEntry.find(
+        {},
+        { characterId: 1, kind: 1, subjectId: 1, day: 1, source: 1, status: 1, informant: 1 },
+      ).lean()
+    ).map((d) => ({
+      characterId: d.characterId.toHexString(),
+      kind: d.kind,
+      subjectId: d.subjectId,
+      day: d.day,
+      source: d.source,
+      status: d.status,
+      informant: d.informant ? { fromDay: d.informant.fromDay, untilDay: d.informant.untilDay } : null,
+    })),
+    legacy: (await LegacyEntry.find({}, { characterId: 1, kind: 1, points: 1, day: 1 }).lean()).map((l) => ({
+      characterId: l.characterId.toHexString(),
+      kind: l.kind,
+      points: l.points,
+      day: l.day,
+    })),
+  });
+
   if (process.argv.includes('--json')) {
     console.log(
-      JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4, together, nation }, null, 2),
+      JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4, together, nation, life }, null, 2),
     );
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
@@ -923,6 +999,15 @@ try {
       `\nThe nation: does holding office feel powerful, and does losing it make players want to fight back? (${nation.testers} testers; test members and boosted testers left out)\n`,
     );
     for (const t of nationTables(nation)) {
+      console.log(t.title);
+      if (t.rows.length > 0) console.table(t.rows);
+      else console.log('  none');
+    }
+
+    console.log(
+      `\nA life in the city: does an unfilled clock bring players back tomorrow? (${life.testers} testers; test members and boosted testers left out)\n`,
+    );
+    for (const t of lifeTables(life)) {
       console.log(t.title);
       if (t.rows.length > 0) console.table(t.rows);
       else console.log('  none');

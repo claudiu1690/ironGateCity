@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { mapAtRest, openLocation, signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §15.1, T20; screens §2–§5): the Wardrobe and the shops on a phone at 390 × 844.
@@ -47,6 +48,7 @@ test('the Wardrobe: chips, slots, a hat bought, worn, kept, sold back', async ({
   await expect(block.getByTestId('outfit-town')).toHaveAttribute('aria-pressed', 'true');
   await block.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/wardrobe.png` });
+  await lifeSweep(page, 'wardrobe');
 
   // 3. The clothes stall at Market Row: the hat for 400 Iron, one tap, the *Bought* modal.
   await page.goto('/city/coalport');
@@ -59,6 +61,7 @@ test('the Wardrobe: chips, slots, a hat bought, worn, kept, sold back', async ({
   await expect(hat.getByTestId('shop-buy')).toHaveText('Buy · 400 Iron');
   await expect(stall.getByTestId('shop-line')).toHaveText("The stall buys too: a coat you don't want, at a tenth");
   await page.screenshot({ path: `${SHOTS}/shop-card.png` });
+  await lifeSweep(page, 'shop-card');
   await hat.getByTestId('shop-buy').click();
   const bought = resultModal(page);
   await expect(bought.getByTestId('stamp')).toHaveText('Bought');

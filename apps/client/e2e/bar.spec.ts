@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { mapAtRest, openLocation, signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §24.11, T32; screens §18.4–§18.5): the bar and the dining room, on a phone at
@@ -62,6 +63,7 @@ test('the bar: a plate, a round, the receipts, the Me tab, the clock, the dining
   // Below Rank 3 the back room is not on the sheet at all (screens §4).
   await expect(page.getByRole('dialog').locator('[data-shop="backRoom"]')).toHaveCount(0);
   await page.screenshot({ path: `${SHOTS}/bar-card.png` });
+  await lifeSweep(page, 'bar-card');
 
   // 2. *A plate of something*: *Fed*, Health +15 (the real gain), Well fed until a time.
   await card.getByTestId('bar-plate').click();

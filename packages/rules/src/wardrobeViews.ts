@@ -106,6 +106,8 @@ export interface HireRowView {
   week: number;
   /** Against a street enforcer on a mission at home (§24.10 Q7). */
   word: 'good' | 'fair' | 'long';
+  /** Design §25 #1: that chance sits at the formula's ceiling (95): the row adds *as good as odds get*. */
+  capped: boolean;
   state: 'hire' | 'level' | 'rank' | 'withYou' | 'running' | 'needsIron';
   need?: number;
   name?: string;

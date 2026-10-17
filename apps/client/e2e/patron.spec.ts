@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { sheetSettled, signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §15.1, T22, T23; screens §8, §12): a patron on a phone at 390 × 844. A Level
@@ -44,7 +45,12 @@ test('a patron: the card, a gift, the Letters, Associate', async ({ page }) => {
   await expect(card.getByTestId('patron-gift')).toHaveText('Gift · 200 Iron');
   for (const b of await card.getByRole('button').all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   expect((await card.textContent()) ?? '').not.toMatch(/\b(tier|NPC)\b|%/);
+  // Design §25 #6: the card is first on the sheet, above the place's tickets.
+  const sheet = page.locator('[role=dialog][data-layout]');
+  const firstTicket = sheet.locator('[data-testid^="ticket-"]').first();
+  expect((await card.boundingBox())!.y).toBeLessThan((await firstTicket.boundingBox())!.y);
   await page.screenshot({ path: `${SHOTS}/patron-card.png` });
+  await lifeSweep(page, 'patron-card');
 
   // 2. *Gift · 200 Iron* → *Given*: Favour 0 → 2; the card reads *Given today*.
   await card.getByTestId('patron-gift').click();
@@ -63,6 +69,7 @@ test('a patron: the card, a gift, the Letters, Associate', async ({ page }) => {
   await expect(letter).toContainText('From Edith Crane');
   await letter.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/paper-letters.png` });
+  await lifeSweep(page, 'paper-letters');
   card = await craneCard(page);
   await expect(card.getByTestId('request-row').first().getByTestId('request-progress')).toHaveText(/^0 of \d+$/);
 

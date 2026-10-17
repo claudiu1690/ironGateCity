@@ -91,12 +91,21 @@ export function minderView(content: GameContent, c: CharacterDoc, today: DayKey)
 }
 
 /** The street enforcer on a mission at home: the card's odds word (§24.10 Q7). */
-function cardWord(content: GameContent, tier: BodyguardTier): 'good' | 'fair' | 'long' {
+/** His chance against a street enforcer on a mission at home (§24.10 Q7), or null without one. */
+function cardChance(content: GameContent, tier: BodyguardTier): number | null {
   const enforcer = content.opponents.find((o) => o.id === 'street-enforcer') ?? content.opponents.find((o) => o.side !== 'police');
-  if (!enforcer) return 'fair';
+  if (!enforcer) return null;
   const them = scaleOpponent(enforcer, { tier: 2, rivalGround: false });
-  return oddsBand(minderChance(minderPower(tier), them));
+  return minderChance(minderPower(tier), them);
 }
+
+function cardWord(content: GameContent, tier: BodyguardTier): 'good' | 'fair' | 'long' {
+  const chance = cardChance(content, tier);
+  return chance === null ? 'fair' : oddsBand(chance);
+}
+
+/** Design §25 #1: the formula's ceiling (§20.1 clamps 5–95). */
+const ODDS_CEILING = 95;
 
 /** Tech design §24.6: the party store's hire card (a `partyStore` shop with `hire`), or null. */
 export function hireCard(content: GameContent, c: CharacterDoc, locationId: string, today: DayKey): HireCardView | null {
@@ -129,6 +138,7 @@ export function hireCard(content: GameContent, c: CharacterDoc, locationId: stri
         portrait: assetView(content, b.portrait),
         week: spec.week,
         word: cardWord(content, b.tier),
+        capped: (cardChance(content, b.tier) ?? 0) >= ODDS_CEILING,
         state,
         ...(g?.need !== undefined ? { need: g.need } : {}),
         ...(k && contractCounts(k, today) ? { name: k.name, until: k.paidThroughDay } : {}),

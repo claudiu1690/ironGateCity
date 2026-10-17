@@ -358,14 +358,17 @@ async function lifeEdition(
     v.patronTier = { tier: tierWord(cross.tier), patron: pname(cross.patronId), perkLine: perkLineOf(cross.tier, cross.patronId) };
   }
 
-  // The flat: bought yesterday, due today, waiting since this morning.
+  // The flat: bought yesterday, due today, waiting since this morning. The purchase and the rent are
+  // separate facts (design §25 #5): a flat bought and lapsed on the same day still prints *The Flat
+  // Waits* (priority 1); the selector picks the two personal lines by priority.
   const flat = c.home?.flat ?? null;
   if (flat) {
     const until = weekdayName(flat.paidThroughDay);
     if (flat.boughtDay === yesterday) {
       kinds.push('flatBought');
       v.flatBought = { city: cityName(flat.cityId), restedLine: copy.life.knock.rested, until, paper };
-    } else if (flat.paidThroughDay === today) {
+    }
+    if (flat.paidThroughDay === today) {
       kinds.push('flatDue');
       v.flatDue = { street };
     } else if (flat.paidThroughDay === yesterday) {
@@ -427,7 +430,7 @@ async function lifeEdition(
       kind: 'informant',
       from: copy.life.dossier.paper.fromInformant,
       title: l.subject,
-      line: `${l.line} · ${l.subject} · ${copy.life.dossier.category[l.category].toLowerCase()}. ${l.daysLeft} days of reports left.`,
+      line: `${l.line} · ${l.subject} · ${copy.life.dossier.category[l.category].toLowerCase()}. ${l.daysLeft} ${l.daysLeft === 1 ? 'day' : 'days'} of reports left.`,
     });
   for (const l of i.landings.filter((x) => x.kind === 'gossip' && x.landed))
     letters.push({

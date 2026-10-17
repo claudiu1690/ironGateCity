@@ -15,33 +15,36 @@ interface PlaceAct {
 
 /**
  * Slice 8 phase C, lane Q (screens §6.3, §7, §8.1; tech design §12.1): a place's Dossier and patron
- * cards, first in the sheet's card slot (the patron above the shop above Jobs): the patron who
- * receives here (Herald House, the Pier Hotel), the press's exposé ticket, the station's man by the
- * left-luggage. Every act is one tap through the page's political act (one key per tap).
+ * cards: the patron who receives here (Herald House, the Pier Hotel), the press's exposé ticket, the
+ * station's man by the left-luggage. Every act is one tap through the page's political act (one key
+ * per tap). Design §25 #6: the patron's card is `part="patron"`, first on the sheet above the tickets;
+ * the exposé's ticket and the station's card are `part="cards"`, first in the card slot.
  */
 export function PlaceDossierCards({
   locationId,
   kind,
   open,
   act,
+  part = 'cards',
 }: {
   locationId: string;
   kind: string;
   open: boolean;
   act: PlaceAct;
+  part?: 'patron' | 'cards';
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const life = useQuery({ ...trpc.life.place.queryOptions({ locationId }), enabled: open });
-  const patron = (life.data as { patron?: PatronCardView | null } | undefined)?.patron ?? null;
+  const life = useQuery({ ...trpc.life.place.queryOptions({ locationId }), enabled: open && part === 'patron' });
+  const patron = part === 'patron' ? ((life.data as { patron?: PatronCardView | null } | undefined)?.patron ?? null) : null;
   const station = useQuery({
     ...trpc.dossier.station.queryOptions({ locationId }),
-    enabled: open && kind === 'station',
+    enabled: open && part === 'cards' && kind === 'station',
     refetchOnMount: 'always',
   });
   const press = useQuery({
     ...trpc.expose.get.queryOptions({ locationId }),
-    enabled: open && kind === 'press',
+    enabled: open && part === 'cards' && kind === 'press',
     refetchOnMount: 'always',
   });
   const [selling, setSelling] = useState(false);
@@ -64,9 +67,9 @@ export function PlaceDossierCards({
     void act.run(label, call);
   };
 
-  return (
-    <div className="flex flex-col gap-2" data-testid="place-dossier">
-      {patron && (
+  if (part === 'patron')
+    return patron ? (
+      <div className="flex flex-col gap-2" data-testid="place-patron">
         <PatronCard
           card={patron}
           onGift={() =>
@@ -81,7 +84,11 @@ export function PlaceDossierCards({
           favourPending={act.pending === 'favour'}
           notice={notice('patron')}
         />
-      )}
+      </div>
+    ) : null;
+
+  return (
+    <div className="flex flex-col gap-2" data-testid="place-dossier">
       {kind === 'press' && press.data && (
         <ExposeTicket
           refusal={press.data.step === 2 ? null : press.data.refusal}

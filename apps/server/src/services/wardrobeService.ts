@@ -5,6 +5,7 @@ import type { CharacterDoc, JourneyDoc } from '@irongate/db';
 import {
   ITEM_SLOTS,
   OUTFIT_IDS,
+  RECOGNITION,
   asEquipment,
   equippedItems,
   isPlainClothes,
@@ -42,8 +43,16 @@ function chaWith(content: GameContent, c: Wearer, eq: Equipment, now: number): n
   return wornCha(c.stats.chaBase, items, flatChaOf(c, now));
 }
 
+/** Design §25 #2: the coat is recognised from `RECOGNITION.cha`'s lowest edge (20); under it, nobody looks twice. */
+const RECOGNISED_FROM = Math.min(...RECOGNITION.cha.map(([at]) => at));
 const chipLine = (id: OutfitId, cha: number): string =>
-  id === 'town' ? w.chipTown(cha) : id === 'plain' ? w.chipPlain(cha) : w.chipEvening(cha);
+  id === 'town'
+    ? cha >= RECOGNISED_FROM
+      ? w.chipTown(cha)
+      : w.chipTownPlain(cha)
+    : id === 'plain'
+      ? w.chipPlain(cha)
+      : w.chipEvening(cha);
 
 /** Tech design §8.3: the Wardrobe block, its chooser and the sheet. */
 export function wardrobeView(content: GameContent, c: Wearer, now: number): WardrobeView {

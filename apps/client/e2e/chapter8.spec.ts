@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { arrive, signUpOnly } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §15.1, T14's chapters on screen, T21's knock-ons): *Who Sold the Homes*
@@ -64,9 +65,11 @@ test('Who Sold the Homes: chapter 2 lands Brandauer in the Dossier', async ({ pa
   await expect(page.getByTestId('tab-dot-dossier')).toBeVisible();
   await page.getByRole('link', { name: /^Dossier/ }).click();
   await expect(page.locator('[data-testid="name-card"][data-subject="npc.brandauer"]')).toBeVisible();
+  await lifeSweep(page, 'the Dossier tab');
 
   // Chapter 3, *The archive* (needs a Case File), is a stub in content (no story yet): the Me tab
   // reads *Chapter 2 done* even with a file on him. Left for the designer (lane Q's Deviations).
   await page.goto('/me');
   await expect(page.getByTestId('me-ambition')).toHaveText('Chapter 2 done');
+  await lifeSweep(page, 'the Me tab');
 });

@@ -141,6 +141,39 @@ export async function sweep(page: Page, where: string): Promise<void> {
   expect(strayFronts(text), `${where}: *front* outside The Front, a front door or a front page`).toEqual([]);
 }
 
+/**
+ * Slice 8 (tech design §20 T24; design §1.1, §18 Q13, §24.1): a slice-8 screen says none of the system's
+ * words for the Wardrobe (*inventory, equipment, slot, tier, armour, CHA, utility, loadout*), *Black
+ * Market* or *NPC*, and never calls the man who walks with you a *bodyguard, guard, escort, muscle,
+ * enforcer, protection* or *hired hand*. *Enforcer* is the opponent's word: *a street enforcer* stays.
+ * The season is deferred (design §23), so *season* and *Champion* are refused too, not allowed.
+ * Plus slice 7's list, the war words and the *front* rule (*front page* and *The Front* allowed).
+ */
+const LIFE_REFUSED =
+  /\b(?:inventory|equipment|slots?|tiers?|armou?r|utility|loadouts?|Black Market|bodyguards?|guards?|escorts?|muscle|enforcers?|protection|hired hands?|seasons?|Champions?)\b/i;
+/** The stat's abbreviation, case-sensitive (*Charisma* and *chat* are fine). */
+const CHA = /\bCHA\b/;
+/** The opponent's name, the one place *enforcer* belongs. */
+const OPPONENT = /\bstreet enforcers?\b/gi;
+/** A building's front, like *the front door*: the Union Hall's *columns out front*. */
+const OUT_FRONT = /\bout front\b/gi;
+/** Slice 1's stat strip on the Me tab (*STR 8 INT 12 AGI 5 CHA 5*), not a slice-8 string: left to QA. */
+const STAT_STRIP = /\bSTR\s+\d+\s+INT\s+\d+\s+AGI\s+\d+\s+CHA\s+\d+\b/g;
+
+/** A refused word with the text around it (for the failure message), or null. */
+const hitIn = (text: string, re: RegExp): string | null => {
+  const m = re.exec(text);
+  return m ? `${m[0]} in "${text.slice(Math.max(0, m.index - 30), m.index + m[0].length + 30).replace(/\s+/g, ' ')}"` : null;
+};
+
+export async function lifeSweep(page: Page, where: string): Promise<void> {
+  const text = (await page.locator('body').innerText()).replace(OPPONENT, '').replace(OUT_FRONT, '').replace(STAT_STRIP, '');
+  expect(hitIn(text, REFUSED), `${where}: a refused word`).toBeNull();
+  expect(hitIn(text, WAR), `${where}: a war word`).toBeNull();
+  expect(strayFronts(text), `${where}: *front* outside The Front, a front door or a front page`).toEqual([]);
+  expect(hitIn(text, LIFE_REFUSED) ?? hitIn(text, CHA), `${where}: a slice-8 refused word`).toBeNull();
+}
+
 /** The selected chip's three cues (review 7 #1): ink 600 text, the paper-card fill, the 3 px ink bar. */
 export async function selectedChipCues(page: Page, testId: string): Promise<void> {
   const chip = page.getByTestId(testId);

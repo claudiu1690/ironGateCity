@@ -749,15 +749,24 @@ export function CityPage() {
   /**
    * The share bar, captioned; a tap opens the plate's notes. Slice 7 fix round (QA m1): a real button
    * (keyboard-reachable, labelled), clear of the rule line's 44 px target, which ends at its top.
+   * Slice 8 integration (the 44 px rule, QA slice 7's known `qa-risk` red): the bar is drawn as it was
+   * (`share-bar`, 6 px on a short phone); the button over it is a 44 px target centred on the bar, out
+   * of the layout (absolute), so nothing moves. Where it reaches over the rule line's target, the rule
+   * line (z-20) stays on top.
    */
   const shareBar = (
-    <button
-      type="button"
-      className="flex w-full cursor-pointer items-center gap-1.5 px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink [@media(max-width:639px)_and_(max-height:700px)]:py-0"
-      onClick={() => plateHelp.current?.click()}
-      aria-label={`${copy.help.shareCaption(c.name)}: the plate's notes`}
-      data-testid="share-bar"
-    >
+    <div className="relative w-full" data-testid="share-bar">
+      <button
+        type="button"
+        className="absolute inset-x-0 top-1/2 z-10 h-11 -translate-y-1/2 cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+        onClick={() => plateHelp.current?.click()}
+        aria-label={`${copy.help.shareCaption(c.name)}: the plate's notes`}
+        data-testid="share-bar-button"
+      />
+      <div
+        className="pointer-events-none flex w-full items-center gap-1.5 px-1 py-0.5 text-left [@media(max-width:639px)_and_(max-height:700px)]:py-0"
+        aria-hidden="true"
+      >
       <span
         className={cx(
           'label-caps shrink-0 text-[8.5px] text-muted',
@@ -774,7 +783,8 @@ export function CityPage() {
         ))}
         <span style={{ width: `${c.opinion.neutral}%` }} className="bg-neutral" />
       </span>
-    </button>
+      </div>
+    </div>
   );
 
   /**
@@ -1411,7 +1421,7 @@ export function CityPage() {
           // Lodgings, *In the cells now* and the Town Hall's blocks follow in their phases.
           cards={[
             // Slice 8 (screens §4, §18): shops, someone to walk with you, the bar, the back room; above Jobs.
-            // Slice 8 lane Q (screens §6.3, §7, §8.1): the patron first, the exposé's ticket, the station's man.
+            // Slice 8 lane Q (screens §6.3, §7): the exposé's ticket, the station's man (the patron is above the tickets).
             <PlaceDossierCards key="dossier" locationId={sheetPlace.id} kind={sheetPlace.kind} open={sheetOpen} act={act} />,
             <PlaceLifeCards key="life" locationId={sheetPlace.id} open={sheetOpen} act={act} />,
             <JobsCard
@@ -1476,6 +1486,8 @@ export function CityPage() {
             )),
           ]}
         >
+          {/* Slice 8 (design §25 #6, screens §8.1): the patron who receives here, first, above the tickets. */}
+          <PlaceDossierCards part="patron" locationId={sheetPlace.id} kind={sheetPlace.kind} open={sheetOpen} act={act} />
           {energy.value < cheapest && <OutOfEnergyCard fullAt={character.energy.fullAt} waiting={waiting} />}
           {sheetPlace.actions.map((a) => (
             <Ticket

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
 import { sheetSettled, signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §15.1, T21, T23; screens §6, §7, §12): the Dossier and the exposé on a phone at
@@ -72,6 +73,7 @@ test('the Dossier: three entries, a Case File, the exposé printed, the front pa
   for (const b of await page.getByTestId('dossier-page').getByRole('button').all())
     expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: `${SHOTS}/dossier.png` });
+  await lifeSweep(page, 'dossier');
 
   // 2. *Make a Case File* → *Bound*, with the slots line.
   await make.click();
@@ -106,6 +108,7 @@ test('the Dossier: three entries, a Case File, the exposé printed, the front pa
   await expect(story.getByTestId('expose-angle')).toHaveCount(2);
   await expect(story.locator('[data-angle="headline"]')).toBeInViewport();
   await page.screenshot({ path: `${SHOTS}/expose-step1.png` });
+  await lifeSweep(page, 'expose-step1');
   await story.locator('[data-angle="plain"]').click();
 
   // 5. Step 2 (resumable: a reload keeps the file and the angle): three ways with odds words; the CTA.
@@ -121,6 +124,7 @@ test('the Dossier: three entries, a Case File, the exposé printed, the front pa
   await page.locator('[data-way="write"]').click();
   await expect(page.getByTestId('expose-cta')).toHaveText('Take it to the editor · 20 Energy');
   await page.screenshot({ path: `${SHOTS}/expose-step2.png` });
+  await lifeSweep(page, 'expose-step2');
   await hook(page, 'street', { rolls: [1] });
   await page.getByTestId('expose-cta').click();
 
@@ -136,6 +140,7 @@ test('the Dossier: three entries, a Case File, the exposé printed, the front pa
   expect(all).toContain(`${RIVAL.name} is in tomorrow's paper`);
   await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
   await page.screenshot({ path: `${SHOTS}/expose-printed.png` });
+  await lifeSweep(page, 'expose-printed');
   await result.getByRole('button', { name: 'Continue' }).click();
   await expect(page).toHaveURL(/\/city\/irongate\/irongate\.old-town\?loc=irongate\.herald-house/);
 
@@ -169,6 +174,7 @@ test('the Dossier: three entries, a Case File, the exposé printed, the front pa
   await expect(front).toContainText(`${RIVAL.name} EXPOSED`);
   await expect(front).toContainText('By Klara Vesely');
   await page.screenshot({ path: `${SHOTS}/expose-front-page.png` });
+  await lifeSweep(page, 'expose-front-page');
   await hook(page, 'dossier', { entries: [{ subjectId: RIVAL.id, category: 'political' }] });
   await page.goto('/dossier');
   await expect(page.locator(`[data-testid="name-card"][data-subject="${RIVAL.id}"]`).getByTestId('name-burned')).toContainText(

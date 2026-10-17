@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { mapAtRest, openLocation, signUp } from './helpers';
+import { lifeSweep } from './nationKit';
 
 /**
  * Slice 8 (tech design §24.11, T32; screens §18.1–§18.3): someone to walk with you, on a phone at
@@ -42,11 +43,16 @@ test('someone to walk with you: hired, his row at a run-in, the police, the last
   await expect(card.getByTestId('hire-row-1').getByTestId('hire-odds')).toHaveText(
     /^Steps in first at a run-in · his strength: (Good odds|Fair odds|Long shot)$/,
   );
+  // Design §25 #1: the minder's 95 is the ceiling, so his row adds *as good as odds get*; the doorman's does not.
+  await expect(card.getByTestId('hire-row-3').getByTestId('hire-odds')).toHaveText(
+    'Steps in first at a run-in · his strength: Good odds · as good as odds get',
+  );
   await expect(card.getByTestId('hire-row-3')).toHaveAttribute('data-state', 'level');
   await expect(card.getByTestId('hire-row-3').getByTestId('hire-state')).toHaveText('From Level 16');
   expect(await card.textContent()).not.toMatch(/bodyguard|\bguard\b|escort|muscle/i);
   for (const b of await card.getByRole('button').all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: `${SHOTS}/hire-card.png` });
+  await lifeSweep(page, 'hire-card');
 
   // 2. *Hire · 400 Iron*: one tap, the *Hired* modal with his name; the row now runs.
   await card.getByTestId('hire-row-1').getByTestId('hire').click();
@@ -84,6 +90,7 @@ test('someone to walk with you: hired, his row at a run-in, the police, the last
   const rows = runIn.getByRole('group').getByRole('button');
   await expect(rows.first()).toHaveAttribute('data-testid', 'run-in-minder');
   await page.screenshot({ path: `${SHOTS}/run-in-minder.png` });
+  await lifeSweep(page, 'run-in-minder');
   await row.click();
   const minded = resultModal(page);
   const block = minded.getByTestId('result-run-in');
