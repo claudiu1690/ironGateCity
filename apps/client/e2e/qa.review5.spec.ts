@@ -628,6 +628,9 @@ test.describe('m5 a resolved run-in left open (API and the gate)', () => {
     await expect(result.getByRole('heading', { level: 2 })).toHaveText(second.headline);
     await result.getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(result.getByRole('heading', { level: 2 })).toHaveText(first.headline);
+    // The two talks can share a headline, so the heading alone does not prove the close landed: wait for
+    // the pointer to move on (slice 8 integration: the gate's extra invalidations made the race show).
+    await expect.poll(async () => (await me(page)).runIn?.encounterId, { timeout: 10_000 }).toBe(first.id);
     expect((await me(page)).runIn).toMatchObject({ encounterId: first.id, state: 'resolved' });
     await result.getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(result).toHaveCount(0);
