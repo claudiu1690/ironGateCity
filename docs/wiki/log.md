@@ -9,6 +9,14 @@ updated: 2026-10-17
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-17] update | Slice 8 QA report (QA)
+
+[[qa/slice-8-report|The slice 8 QA report]] (time-boxed, API-level, the build at `bd066a3`): races and
+idempotency on every named action, the numbers against the GDD and economy §22, and a week away all
+pass; one minor (the share bar's button over two pins' targets) and two nits are in [[Open Questions]]
+(S8-QA1). The history page [[Slice 8 A Life in the City]] has the summary under *QA and leftovers*. No
+GDD-versus-code mismatch found, so the [[Drift Report]] is unchanged. Added `qa.slice8.spec.ts`.
+
 ## [2026-10-17] update | Slice 8 integration: plurals and spelled-out stats (the designer)
 
 Eight `copy.life` strings that read wrong at 1 now pluralise (the desk's Dossier row, the informant's

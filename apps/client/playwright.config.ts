@@ -70,6 +70,7 @@ export default defineConfig({
         /(^|[\\/])patron\.spec\.ts$/,
         /(^|[\\/])home\.spec\.ts$/,
         /(^|[\\/])chapter8\.spec\.ts$/,
+        /qa\.slice8\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -345,6 +346,13 @@ export default defineConfig({
       name: 'chapter8',
       testMatch: /(^|[\\/])chapter8\.spec\.ts$/,
       dependencies: ['home'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    // QA slice 8 (docs/qa/slice-8-report.md): races and being away, through the API; moves the shared clock.
+    {
+      name: 'qa-slice8',
+      testMatch: /qa\.slice8\.spec\.ts/,
+      dependencies: ['chapter8'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],
