@@ -53,6 +53,7 @@ updated: 2026-10-16
 - Review 4 (6 Oct 2026): the favour you did in the opening becomes your first action.
 - Slice 8 design: two neutral patrons in battlegrounds for the MVP (Appendix C #77 on Favour's pace).
 - Appendix C #89: visits from anywhere but rival ground.
+- **17 Oct 2026 (the designer, phase C; design §25 #6):** the patron's card goes **first on the place's sheet, above the tickets** at Herald House and the Pier Hotel (was in the card slot under the tickets, below the morgue file); screens §8.1 and §12 corrected. Code: `PlaceDossierCards` (developer).
 
 ## Open questions / drift
 

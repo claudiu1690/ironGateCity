@@ -49,6 +49,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 - v3.1 rework: prepaid contracts, nothing taken on lapse (GDD §0, the absence rule).
 - **14 Oct 2026 (the user):** MVP, slice 8.
 - **16 Oct 2026 (the designer):** the party store, not the back room (Appendix C #110 closed); one price per week, 400 / 1,200 / 3,000; a visible row at the Fight formula with his power; never against the police (Appendix C #113); no auto-renew; four weeks ahead at most.
+- **17 Oct 2026 (the designer, phase C; design §25 #1):** the steward (86 %) and the minder (95 %) both read *Good odds* and the three odds words stay (GDD §8.4, no fourth band); a row at the formula's ceiling (95) adds the tag ***as good as odds get*** on the hire card and on his run-in row (`copy.life.minder.asGoodAsTheyGet`). Code: `HireRowView.capped`, the card and the run-in row (developer).
 
 ## Open questions / drift
 

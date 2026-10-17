@@ -1,13 +1,22 @@
 ---
 type: overview
 title: Log
-updated: 2026-10-16
+updated: 2026-10-17
 ---
 
 # Log
 
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
+
+## [2026-10-17] update | Slice 8 phase C rulings (the designer)
+
+Six rulings on the lanes' deviations (design §25): the odds words stay three with a ceiling tag,
+the Town chip under Charisma 20, lane Q's copy, the exposé's page is the outcome's, *The Flat
+Waits* keeps priority 1, the patron card first on the sheet. Strings in `copy.life`; four code
+changes for the developer ([[Drift Report]] S8-5). Updated [[Bodyguards]], [[Equipment and Wardrobe]],
+[[The Dossier]], [[The Morning Paper]], [[Patronage and Favours]], [[Slice 8 A Life in the City]],
+[[Decision Log]].
 
 ## [2026-10-16] build | Slice 8 phase C, lane Q (the Dossier, the exposé, patrons, home, Legacy, the paper)
 

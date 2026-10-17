@@ -54,6 +54,7 @@ What you wear is who you are in Irongate: **Charisma is worn** ([[Stats and Chec
 - Slice 8 design (4 Oct 2026): no weapon slot, no weapon items (Appendix C #74); the revolver and truncheon art is not catalogued.
 - 4 Oct 2026: the user asked for the inventory research before the Wardrobe was designed.
 - Review 5 (8 Oct 2026): items re-strung for *Coming home*; ids unchanged.
+- **17 Oct 2026 (the designer, phase C; design §25 #2):** the Town chip below Charisma 20 reads *Town · Charisma 5 · nobody looks twice at the coat* (`copy.life.wardrobe.chipTownPlain`); *recognised on rival ground* from the set's Charisma 20 (`RECOGNITION.cha`'s lowest edge). Code: `wardrobeService` `chipLine` (developer).
 
 ## Open questions / drift
 

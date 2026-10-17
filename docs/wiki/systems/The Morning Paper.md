@@ -100,6 +100,10 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
 - 14 Oct 2026 (drift cleanup): GDD §3.3's slice-4, slice-5 and slice-7 paragraphs now agree with
   local editions (a visitor on rival ground or in Clearwater reads their own paper in that city's
   edition; the Courier is the lake resident's paper).
+- **17 Oct 2026 (the designer, phase C; design §25 #5):** *The Flat Waits* (priority 1) outranks the
+  Level 10 and other milestone lines (priority 2); the two personal slots are chosen from every
+  personal candidate of the morning in one stable sort by priority. If the Level 10 lines still win,
+  the selector merges too late (developer); the numbers do not move.
 
 ## Open questions / drift
 

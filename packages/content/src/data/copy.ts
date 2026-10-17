@@ -3209,8 +3209,13 @@ export const copy = {
       kicker: 'Wardrobe',
       charisma: (n: number) => `Charisma ${n}`,
       outfits: { town: 'Town', plain: 'Plain clothes', evening: 'Evening' } as Record<'town' | 'plain' | 'evening', string>,
-      /** The chip's second line by outfit: *Town · Charisma 17 · recognised on rival ground*. */
+      /**
+       * The chip's second line by outfit: *Town · Charisma 17 · recognised on rival ground* from
+       * Charisma 20 (design §3.6, `RECOGNITION.cha`'s lowest edge); below it, *nobody looks twice
+       * at the coat* (phase C ruling, design §25 #2).
+       */
       chipTown: (n: number) => `Town · Charisma ${n} · recognised on rival ground`,
+      chipTownPlain: (n: number) => `Town · Charisma ${n} · nobody looks twice at the coat`,
       chipPlain: (n: number) => `Plain clothes · Charisma ${n} · unnoticed on rival ground`,
       chipEvening: (n: number) => `Evening · Charisma ${n} · dressed for the Casino`,
       /** The Evening chip while the rent is out. */
@@ -3385,8 +3390,8 @@ export const copy = {
       empty: {
         names: 'Nothing yet. Listen at a bar, read the notices, watch a platform: one time in ten, a name goes in here.',
         filesEarly: 'Three entries on one name make a Case File. From Level 16.',
-        files: 'No Case File yet. Three entries on one name.',
-        informants: 'No informant yet. Turn a Case File with a pattern line in a town whose patron is your Associate.',
+        files: 'No Case File yet. Three fresh entries on one name make one.',
+        informants: 'No informant yet. Turn a Case File with a pattern line, in a town whose patron counts you an Associate.',
       },
       /** A Case File chosen for a story or attached to an event (it waits there). */
       inUse: 'In a story or an event · it waits there',
@@ -3397,15 +3402,15 @@ export const copy = {
       sources: {
         intelligence: 'Listening',
         surveillance: 'Watching',
-        theft: 'A lifted letter',
-        informer: 'On the train',
+        theft: 'Lifted papers',
+        informer: "A rival's informer",
         cells: 'In the cells',
         ward: 'On the ward',
         society: 'A society call',
         gossip: "A patron's word",
         informant: 'Your informant',
         chapter: 'A chapter',
-        morgue: 'The morgue',
+        morgue: 'The morgue file',
         test: 'A test',
       } as Record<string, string>,
       entryStale: (source: string, weekday: string) => `${source} · ${weekday} · stale`,
@@ -3422,10 +3427,14 @@ export const copy = {
       kicker: (paper: string, n: number) => `Exposé · ${paper} · step ${n} of 3`,
       step1: 'The file and the angle',
       lines: (n: number) => `${n} lines`,
+      /**
+       * Phase C ruling (design §25 #4): the outcome decides the page (a Success is the front page
+       * on either angle), the angle decides the split and the difficulty. Neither hint names a page.
+       */
       plainly: 'The facts, plainly',
-      plainlyHint: "Every line checked. It runs on page three. Nothing to your party's name.",
+      plainlyHint: "Every line checked, nothing added. What they lose goes to the undecided; none to your party's name.",
       headline: 'The story, with a headline',
-      headlineHint: 'Page one, if the editor bites. A point harder.',
+      headlineHint: "Your party's name under it: half of what they lose comes to you. A point harder.",
       step2: "The editor's desk",
       ways: {
         straight: 'Write it straight',
@@ -3442,7 +3451,7 @@ export const copy = {
       text: {
         plainly: {
           success: (party: string) => ({
-            headline: 'Page three, every line',
+            headline: 'Page one, every line',
             body: `Every line checked, every line printed, no adjectives. The ${party}'s office rings the editor at nine. The editor says it's all true, which it is.`,
           }),
           partial: (party: string) => ({
@@ -3782,6 +3791,12 @@ export const copy = {
       row: (said: string, n: number) => `${said} · ${n.toLocaleString('en-GB')} a week`,
       stepsInFirst: 'Steps in first at a run-in · his strength',
       stepsInLine: (odds: string) => `Steps in first at a run-in · his strength: ${odds}`,
+      /**
+       * Phase C ruling (design §25 #1): the three odds words stand (GDD §8.4); a row whose chance
+       * sits at the formula's ceiling (95, §20.1) adds this tag, so the minder's *Good odds* reads
+       * apart from the steward's. *Steps in first at a run-in · his strength: Good odds · as good as odds get*.
+       */
+      asGoodAsTheyGet: 'as good as odds get',
       /** §24.8 #7: the card's figure is a mission's. */
       against: 'against a street enforcer, on a mission at home',
       hire: (n: number) => `Hire · ${n.toLocaleString('en-GB')} Iron`,

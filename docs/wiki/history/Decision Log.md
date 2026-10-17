@@ -185,6 +185,17 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 16 Oct | **The architect's seven questions settled** (tech §24.10): *four weeks ahead* is four beyond the running week; a round at seven or eight tops up to nine; every mission that reaches its rewards uses one round; a meal counts at the mission's start; the same tier re-hired keeps his name; no record surcharge on a hire; **the hire card shows the mission's odds** (62 / 50, 86 / 74), said as *against a street enforcer, on a mission at home* | a mission is where the Iron goes and where the row is read; one number, one place | GDD §0 (16 Oct), §12.1, §19.3; [[design/slice-8-life\|design §24.8]] | [[Bodyguards]], [[Buffs]], [[Bars]] |
 | 16 Oct | Content defaults taken with T6: the help note *The Wardrobe* says *four things you wear* (the design's *four slots* used a refused word); `keep.deposit-receipt`'s *Read* re-strung for the voting rework (no deposit); the existing surveillance and theft missions name no Dossier figure (§21.1 Q12); the morgue file keeps a one-opponent pool (the loader's rule for a non-social mission); chapter 12's note reads *the third month*; slice 4's *Lodgings* copy left as review 4 worded it (*Take a bed*) | the vocabulary guard; the voting rework; the loader | design §16.7, §21.3, §8; `packages/content` | [[Equipment and Wardrobe]], [[Ambitions]], [[The Dossier]], [[Residence]] |
 
+## Slice 8 phase C rulings (17 Oct, the designer; design §25)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 17 Oct | **The odds words stay three** (no *Very good odds*); a row at the formula's 95 ceiling adds the tag *as good as odds get*, so the minder reads apart from the steward | GDD §8.4 / Appendix C #35 were ruled for every ticket; 95 is the clamp of §20.1, so the tag is true | design §25 #1; `copy.life.minder.asGoodAsTheyGet` | [[Bodyguards]], [[Stats and Checks]] |
+| 17 Oct | The Town chip below Charisma 20: *nobody looks twice at the coat*; *recognised on rival ground* from the set's Charisma 20 | the coat adds nothing to recognition under 20; the office still counts, so the line names the coat | design §25 #2; `chipTownPlain` | [[Equipment and Wardrobe]], [[Hostile Ground]] |
+| 17 Oct | Lane Q's copy confirmed; *Lifted papers*, *A rival's informer*, *The morgue file*; two Dossier empty states reworded; the exposé's step texts name no editor | the theft takes rolls; the informer is the hostile deck's, not the train's | design §25 #3 | [[The Dossier]] |
+| 17 Oct | **The exposé's page is the outcome's, not the angle's**: a Success is the front page on either angle; the angle decides the split and the difficulty | §4.5 contradicted itself; the code was right, the strings wrong | design §25 #4, §4.5, §16.6 | [[The Dossier]], [[The Morning Paper]] |
+| 17 Oct | *The Flat Waits* (1) outranks the Level 10 lines (2); the numbers stand; the selector must sort every personal candidate together | a lapse at midnight beats news the Map tab repeats | design §25 #5 | [[The Morning Paper]], [[Residence]] |
+| 17 Oct | The patron card first on the place's sheet, above the tickets | the place is the patron's house; Gift above the fold on a phone | design §25 #6; screens §8.1, §12 | [[Patronage and Favours]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]

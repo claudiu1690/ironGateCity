@@ -59,6 +59,7 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 
 - Slice 8 design (4 Oct 2026): the exposé is a three-step story with its own pointer; Case Files from Level 16; Blackmail and Denounce deferred.
 - Appendix C #76: the exposé's swing is −1.0 / −0.5.
+- **17 Oct 2026 (the designer, phase C; design §25 #3–#4):** **the exposé's page is the outcome's, not the angle's**: a Success is the front page on *plainly* and *the headline* alike (as built); the angle decides only the split (all to Neutral / half to your party) and the point of difficulty; the hints and the plainly Success's title (*Page one, every line*) reworded. Lane Q's copy confirmed, three source words reworded (*Lifted papers*, *A rival's informer*, *The morgue file*), two empty states reworded; the step texts name no editor by rule.
 
 ## Open questions / drift
 
