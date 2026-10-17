@@ -95,7 +95,7 @@ test('the Wardrobe: chips, slots, a hat bought, worn, kept, sold back', async ({
   const all = page.getByTestId('wardrobe-sheet');
   await expect(all.getByTestId('group-accessory').getByTestId('item-name')).toHaveText('A good hat');
   await expect(all.getByTestId('group-accessory').getByTestId('item-state')).toHaveText('Wearing');
-  await expect(all.getByTestId('wardrobe-sellable')).toHaveText(/^Sells at a market: \d+ things$/);
+  await expect(all.getByTestId('wardrobe-sellable')).toHaveText(/^Sells at a market: \d+ things?$/);
   await page.keyboard.press('Escape');
 
   // 7. Selling a worn hat is refused (*Take it off first*); off, it sells for a tenth, out of Town.

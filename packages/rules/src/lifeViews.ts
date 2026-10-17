@@ -80,6 +80,7 @@ export interface DossierInformantView {
   city: string;
   daysLeft: number;
   next: DayKey | null;
+  /** The last report's line (*{line} · {subject} · {weekday}*), or null before the first. */
   last: string | null;
 }
 

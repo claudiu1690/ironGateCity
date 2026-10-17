@@ -396,7 +396,8 @@ export function dossierViewOf(
         city: content.city(span.cityId)?.name ?? span.cityId,
         daysLeft: Math.max(0, span.untilDay - today),
         next: next <= span.untilDay ? next : null,
-        last: null,
+        // Fix round (QA n1): the last report's line (screens §6.1), stored by the settlement.
+        last: span.last ? `${span.last.line} · ${span.last.subject} · ${weekdayName(span.last.day)}` : null,
       };
     }),
     dot: !!c.dossierLastAt && (!c.dossierSeenAt || new Date(c.dossierLastAt).getTime() > new Date(c.dossierSeenAt).getTime()),

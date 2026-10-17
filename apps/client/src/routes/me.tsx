@@ -364,7 +364,7 @@ export function MePage() {
           <dl className="grid grid-cols-4 gap-2 pt-1 text-center">
             {(['str', 'int', 'agi', 'cha'] as const).map((s) => (
               <div key={s} className="flex flex-col border border-faint py-1">
-                <dt className="label-caps text-[10px] text-muted">{s}</dt>
+                <dt className="font-label text-[11px] text-muted">{copy.statNames[s]}</dt>
                 <dd className="font-label text-[20px]" data-testid={`stat-${s}`}>
                   {c.stats[s]}
                 </dd>

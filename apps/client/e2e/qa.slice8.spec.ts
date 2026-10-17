@@ -12,7 +12,9 @@ import type { Api } from './nationKit';
  *  3. patrons: gift (once a day), favour (once a week);
  *  4. the Dossier: bind, sell, turn, the last of 15 places; the exposé's attempt;
  *  5. the flat (buy, rent) and Legacy perks;
- *  6. being away: a lapsed flat, a lapsed contract, a meal, rounds in hand, informants, one settlement.
+ *  6. being away: a lapsed flat, a lapsed contract, a meal, rounds in hand, informants, one settlement;
+ *  7. the share bar's 44 px target stays inside the plate (fix round, m1): every pin wins outside it;
+ *  8. the Me tab's stat strip spells the stats out (fix round, S8-7).
  */
 
 const uuid = () => randomUUID();
@@ -438,6 +440,8 @@ test('6 being away: a lapsed flat waits, a contract stops, a meal runs out, roun
   console.log('QA home after 8 days', JSON.stringify(home.flat), home.line);
   console.log('QA life.me after', JSON.stringify(lm).slice(0, 700));
   console.log('QA informants after', JSON.stringify(d.informants).slice(0, 400), 'used', d.used);
+  // Fix round (QA n1): the Informants row carries the last report's line (screens §6.1).
+  expect(d.informants[0]?.last, "the informant's last report").toMatch(/ · /);
   expect(home.flat, 'the flat is still there').toBeTruthy();
   expect(home.flat.state, 'a lapsed flat waits').toBe('waiting');
   expect(after.iron, 'nothing taken while away (rent is prepaid, never drawn)').toBeGreaterThanOrEqual(before.iron);
@@ -460,9 +464,12 @@ test('6 being away: a lapsed flat waits, a contract stops, a meal runs out, roun
   await a.ctx.close();
 });
 
-const softCheck: string[] = [];
+// Fix round (QA m1): the share bar's button is clipped to the plate's own box. Every point of a pin's
+// 44 × 44 target outside the plate lands on the pin (or on another overlay drawn there: the orders, the
+// paper's banner, the map buttons), never on the plate's helper target; the rule line still takes its tap.
 test('7 integration: the share bar button does not cover a pin or the rule line (short phones)', async ({ browser }) => {
   test.setTimeout(180_000);
+  const misses: string[] = [];
   for (const size of [{ width: 360, height: 640 }, { width: 390, height: 844 }, { width: 812, height: 375 }]) {
     for (const cityId of ['coalport', 'irongate', 'duskwall']) {
       const m = await memberContext(browser, 'Qa Bar', { seed: { level: 10, cityId }, viewport: size });
@@ -470,38 +477,100 @@ test('7 integration: the share bar button does not cover a pin or the rule line 
       await m.page.getByTestId('city-map').waitFor();
       await m.page.waitForTimeout(1500);
       const r = await m.page.evaluate(() => {
-        const btn = document.querySelector('[data-testid=share-bar-button]') as HTMLElement | null;
-        const b = btn?.getBoundingClientRect();
-        const covered: string[] = [];
-        for (const el of document.querySelectorAll('[data-testid=hotspot]')) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        // The plate's own box: over the map on an upright phone, the side column when held sideways.
+        const plate = document.querySelector<HTMLElement>('[data-map-overlay=top]') ?? document.querySelector<HTMLElement>('[data-testid=city-side]');
+        const pb = plate?.getBoundingClientRect();
+        const inPlate = (x: number, y: number) => !!pb && x >= pb.left && x <= pb.right && y >= pb.top && y <= pb.bottom;
+        const btn = document.querySelector<HTMLElement>('[data-testid=share-bar-button]');
+        const bb = btn?.getBoundingClientRect();
+        const bar = document.querySelector<HTMLElement>('[data-testid=share-bar]')?.getBoundingClientRect();
+        const missed: string[] = [];
+        let pins = 0;
+        let points = 0;
+        for (const el of document.querySelectorAll<HTMLElement>('[data-testid=hotspot]')) {
           const rc = el.getBoundingClientRect();
-          // any of nine points of the pin's 44 px target
-          const pts: string[] = [];
-          for (const fx of [0.2, 0.5, 0.8]) for (const fy of [0.2, 0.5, 0.8]) {
-            const t = document.elementFromPoint(rc.left + rc.width * fx, rc.top + rc.height * fy);
-            if (t && btn && (t === btn || btn.contains(t))) pts.push(`${fx}/${fy}`);
+          // Only the pins on the first view (a pin panned off the map is not a tap target).
+          if (rc.width === 0 || rc.left < 0 || rc.top < 0 || rc.right > vw || rc.bottom > vh) continue;
+          pins++;
+          // Five by five points across the 44 × 44 target, 2 px in from its edges.
+          for (const fx of [0, 0.25, 0.5, 0.75, 1]) {
+            for (const fy of [0, 0.25, 0.5, 0.75, 1]) {
+              const x = rc.left + 2 + (rc.width - 4) * fx;
+              const y = rc.top + 2 + (rc.height - 4) * fy;
+              // Under the plate, the plate is on top (the fitted view keeps the pins' markers clear of it).
+              if (inPlate(x, y)) continue;
+              points++;
+              const t = document.elementFromPoint(x, y);
+              if (t && (t === el || el.contains(t))) continue;
+              // Outside its box, nothing of the plate may take the tap.
+              if (t && plate?.contains(t)) {
+                const what = t.closest('[data-testid]')?.getAttribute('data-testid') ?? t.tagName;
+                missed.push(`${el.getAttribute('aria-label') ?? '?'} at ${Math.round(x)},${Math.round(y)} -> ${what}`);
+              }
+            }
           }
-          const cx = rc.left + Math.min(22, rc.width / 2);
-          const cy = rc.top + rc.height / 2;
-          const tc = document.elementFromPoint(cx, cy);
-          if (pts.length) covered.push(`${el.getAttribute('aria-label') ?? '?'} [rect ${Math.round(rc.left)},${Math.round(rc.top)} ${Math.round(rc.width)}x${Math.round(rc.height)}; covered ${pts.join(' ')}; marker point under button: ${!!(tc && btn && (tc === btn || btn.contains(tc)))}]`);
         }
-        const rule = document.querySelector('[data-testid=rule-line]') as HTMLElement | null;
-        const rr = rule?.getBoundingClientRect();
+        // The plate's own controls keep their tap where the button reaches up into the plate (the
+        // plate's notes button opens the same notes, so it may lie under it).
+        const stolen: string[] = [];
+        if (plate && btn) {
+          for (const c of plate.querySelectorAll<HTMLElement>('button, a[href]')) {
+            if (c === btn || c.dataset.testid === 'plate-help') continue;
+            const cr = c.getBoundingClientRect();
+            if (cr.width === 0 || cr.height === 0) continue;
+            const t = document.elementFromPoint(cr.left + cr.width / 2, cr.top + cr.height / 2);
+            if (t && (t === btn || btn.contains(t))) stolen.push(c.dataset.testid ?? c.getAttribute('aria-label') ?? c.tagName);
+          }
+        }
+        const rule = document.querySelector<HTMLElement>('[data-testid=rule-line]');
         let ruleTop: string | null = null;
-        if (rr && b) {
+        if (rule) {
+          const rr = rule.getBoundingClientRect();
           const t = document.elementFromPoint(rr.left + rr.width / 2, rr.top + rr.height / 2);
-          ruleTop = t && (t === rule || rule!.contains(t)) ? 'rule' : (t?.getAttribute('data-testid') ?? t?.tagName ?? null);
+          ruleTop = t && (t === rule || rule.contains(t)) ? 'rule' : (t?.getAttribute('data-testid') ?? t?.tagName ?? null);
         }
-        return { btn: b ? { top: Math.round(b.top), h: Math.round(b.height), w: Math.round(b.width) } : null, covered: [...new Set(covered)], ruleTop };
+        return {
+          pins,
+          points,
+          missed: [...new Set(missed)],
+          stolen,
+          ruleTop,
+          barBottom: bar ? Math.round(bar.bottom) : null,
+          button: bb ? { top: Math.round(bb.top), bottom: Math.round(bb.bottom), h: Math.round(bb.height) } : null,
+        };
       });
-      console.log('QA share bar', size.width + 'x' + size.height, cityId, JSON.stringify(r));
-      if (r.covered.length) await m.page.screenshot({ path: `../../.qa8-results/sharebar-${size.width}x${size.height}-${cityId}.png` });
-      softCheck.push(...r.covered.map((x: string) => `${size.width}x${size.height} ${cityId}: ${x}`));
-      void 0;
+      const where = `${size.width}x${size.height} ${cityId}`;
+      expect(r.pins, `${where}: pins on the first view`).toBeGreaterThan(0);
+      // The button stays a 44 px target and grows upward only: it never reaches below the bar (the
+      // plate's foot).
+      if (r.button) {
+        expect(r.button.h, `${where}: the share bar's target`).toBeGreaterThanOrEqual(44);
+        expect(r.button.bottom, `${where}: the share bar's target ends at the bar's foot`).toBeLessThanOrEqual(r.barBottom ?? 0);
+      }
+      misses.push(...r.missed.map((x) => `${where}: ${x}`), ...r.stolen.map((x) => `${where}: the plate's ${x} under the share bar`));
       if (r.ruleTop) expect(r.ruleTop, 'the rule line takes its own tap').toBe('rule');
       await m.ctx.close();
     }
   }
-  console.log('QA share bar covered pins', JSON.stringify(softCheck, null, 1));
+  expect(misses, 'every point of every pin target outside the plate lands on the pin').toEqual([]);
+});
+
+// Fix round (S8-7, design §18 #8): the Me tab's stat strip spells the four names out, and *Intelligence*
+// fits its column on a 375 px phone.
+test('8 the Me tab: the stat strip spells out Strength, Intelligence, Agility and Charisma (375 × 667)', async ({ browser }) => {
+  const m = await memberContext(browser, 'Qa Stats', { viewport: { width: 375, height: 667 } });
+  await m.page.goto('/me');
+  await expect(m.page.getByTestId('stat-int')).toBeVisible();
+  const cells = await m.page.evaluate(() =>
+    (['str', 'int', 'agi', 'cha'] as const).map((s) => {
+      const dt = document.querySelector(`[data-testid=stat-${s}]`)!.previousElementSibling as HTMLElement;
+      const cell = dt.parentElement!.getBoundingClientRect();
+      return { name: dt.textContent, fits: dt.scrollWidth <= dt.clientWidth && dt.getBoundingClientRect().width <= cell.width, oneLine: dt.getBoundingClientRect().height < 20 };
+    }),
+  );
+  expect(cells.map((c) => c.name)).toEqual(['Strength', 'Intelligence', 'Agility', 'Charisma']);
+  for (const c of cells) expect(c, `${c.name} fits on one line`).toMatchObject({ fits: true, oneLine: true });
+  await m.ctx.close();
 });

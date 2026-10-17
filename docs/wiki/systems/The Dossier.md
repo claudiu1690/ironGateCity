@@ -49,6 +49,8 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 
 ## Status
 
+**Fix round (17 Oct 2026):** the Informants row shows the last report (*{line} · {subject} · {weekday}*), stored on the file by the settlement (`informant.last`, `lifeSettlement.ts`); it was always empty before (QA n1).
+
 **Phase C, lane Q (16 Oct 2026): on screen** (`5510772`): the *Dossier* tab (Names · Case Files · Informants, the dot), *Make a Case File*, the station's card and sheet, the press's ticket and the exposé's two steps with its *Printed* / *Page three* / *Spiked* modal and front page, the public line in every paper, *Attach a Case File* on the Headline Story's call sheet, the entry lines on every result. E2E `dossier.spec.ts`, `chapter8.spec.ts`.
 
 **Phase B, lane 2 (16 Oct 2026): the server is built** (T11, T12): entries from every source but society calls, Case Files, selling at a station, informants, the exposé with its swing in the name's town, the burn and Legacy +2, and the Headline Story's *Attach a Case File* (+50 % on the swing). The tab is phase C.

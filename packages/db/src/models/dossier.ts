@@ -43,7 +43,14 @@ export interface DossierEntryDoc {
   /** A bound entry's file. */
   fileId?: Types.ObjectId | null;
   status: DossierStatus;
-  informant?: { fromDay: DayKey; untilDay: DayKey; reported: number; cityId: string } | null;
+  informant?: {
+    fromDay: DayKey;
+    untilDay: DayKey;
+    reported: number;
+    cityId: string;
+    /** Slice 8 fix round (QA n1): the last report, for the Informants row (screens §6.1). */
+    last?: { line: string; subject: string; day: DayKey } | null;
+  } | null;
   /** Written by every use (the report, the Headline Story, the burn; the spymaster later). */
   used?: { how: 'expose' | 'sold' | 'informant' | 'headlineStory'; day: DayKey; ref: string | null } | null;
   /** The Headline Story's event. */
@@ -98,6 +105,13 @@ const dossierEntrySchema = new Schema<DossierEntryDoc>(
           untilDay: int,
           reported: { type: Number, default: 0, min: 0 },
           cityId: { type: String, required: true },
+          last: {
+            type: new Schema(
+              { line: { type: String, required: true }, subject: { type: String, required: true }, day: int },
+              { _id: false },
+            ),
+            default: null,
+          },
         },
         { _id: false },
       ),

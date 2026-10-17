@@ -1146,7 +1146,7 @@ interface DossierView { used: number; cap: number; fresh: number; stale: number;
   caseFiles: Array<{ id; subjectId; name; factionId; city; kinds: DossierCategory[]; lines: string[]; weight: number;
     print: { ok: boolean; why: string | null; nearest: { locationId; name; street } | null };
     sell: { value: 200; nearest: { locationId; name } | null }; turn: { ok: boolean; why: string | null } }>;
-  informants: Array<{ id; name; city; daysLeft: number; next: DayKey; last: string | null }> }
+  informants: Array<{ id; name; city; daysLeft: number; next: DayKey; last: string | null }> } /* fix round: `last` from `informant.last`, set by the settlement */
 interface ExposeView extends StoryScreenView { step: 1 | 2; files?: Array<{ id; name; party; lines: number }> }
 interface PatronCardView { id: PatronId; name; portrait; voice: string; visited: boolean; level: boolean;
   tier: PatronTier | null; favour: number; next: { tier: PatronTier; at: number } | null;

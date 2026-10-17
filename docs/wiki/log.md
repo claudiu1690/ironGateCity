@@ -9,6 +9,16 @@ updated: 2026-10-17
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-17] build | Slice 8 fix round
+
+QA's m1 and n1, the designer's S8-7 and the spec plural: the share bar's 44 px target grows upward from
+the plate's foot (the Reputation block above it), and `qa.slice8.spec.ts` test 7 now asserts every pin's
+target; the Me tab spells the stats out (`statLabel()` removed; test 8); the informant's last report is
+stored by the settlement and shown on the Informants row; `wardrobe.spec.ts` allows *thing*. Updated
+[[Slice 8 A Life in the City]] (built, QA'd, fixed; *Fix round*), [[Open Questions]] (S8-QA1),
+[[Drift Report]] (S8-7 done), [[The Dossier]], `index.md`. Wrote [[review/slice-8-build-notes|the build
+notes]] for the playtest.
+
 ## [2026-10-17] update | Slice 8 QA report (QA)
 
 [[qa/slice-8-report|The slice 8 QA report]] (time-boxed, API-level, the build at `bd066a3`): races and

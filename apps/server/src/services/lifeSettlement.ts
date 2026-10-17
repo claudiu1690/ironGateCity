@@ -183,6 +183,7 @@ export async function settleLifeInTx(
   for (const f of informants) {
     const span = f.informant!;
     const reports = informantReports(span, settled, today);
+    let last: { line: string; subject: string; day: number } | null = null;
     for (const r of reports) {
       const landed = await landSettled(session, content, c, {
         kind: 'informant',
@@ -193,12 +194,16 @@ export async function settleLifeInTx(
         seed: `informant:${f._id.toHexString()}:${r.n}`,
         daysLeft: Math.max(0, span.untilDay - today),
       });
-      if (landed) landings.push(landed);
+      if (landed) {
+        landings.push(landed);
+        last = { line: landed.line, subject: landed.subject, day: r.day };
+      }
     }
     if (reports.length > 0)
       await DossierEntry.updateOne(
         { _id: f._id, 'informant.reported': span.reported },
-        { $set: { 'informant.reported': reports[reports.length - 1]!.n } },
+        // Fix round (QA n1): the last report's line, for the Informants row.
+        { $set: { 'informant.reported': reports[reports.length - 1]!.n, ...(last ? { 'informant.last': last } : {}) } },
         { session },
       );
   }

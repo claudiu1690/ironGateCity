@@ -75,11 +75,6 @@ export function formatShare(x: number): string {
   return (Math.round(x * 10 + 1e-7) / 10).toFixed(1);
 }
 
-/** "STR", "CHA+INT". */
-export function statLabel(stats: readonly string[]): string {
-  return stats.map((s) => s.toUpperCase()).join('+');
-}
-
 /** "1 day", "4 days". */
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;

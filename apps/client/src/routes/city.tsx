@@ -753,12 +753,14 @@ export function CityPage() {
    * (`share-bar`, 6 px on a short phone); the button over it is a 44 px target centred on the bar, out
    * of the layout (absolute), so nothing moves. Where it reaches over the rule line's target, the rule
    * line (z-20) stays on top.
+   * Slice 8 fix round (QA m1): the target grows upward only, from the bar's foot (the plate's foot), so
+   * it never reaches past the plate's box over a pin; the Reputation block (z-20) keeps its own tap.
    */
   const shareBar = (
     <div className="relative w-full" data-testid="share-bar">
       <button
         type="button"
-        className="absolute inset-x-0 top-1/2 z-10 h-11 -translate-y-1/2 cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+        className="absolute inset-x-0 bottom-0 z-10 h-11 cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
         onClick={() => plateHelp.current?.click()}
         aria-label={`${copy.help.shareCaption(c.name)}: the plate's notes`}
         data-testid="share-bar-button"
@@ -1751,7 +1753,8 @@ function ReputationBlock({ city: c }: { city: CityView }) {
       notes={[copy.help.standing(c.name, c.standing.level)]}
       label="What Reputation means"
       testId="standing-help"
-      className="flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2"
+      // Slice 8 fix round (QA m1): above the share bar's 44 px target, which reaches up into the plate.
+      className="relative z-20 flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2"
     >
       <span className={cx('label-caps text-[9px] text-muted', helpMark)}>Reputation</span>
       <span className="font-label text-[13px]" data-testid="city-standing">
